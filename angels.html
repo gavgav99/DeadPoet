@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Angels · Dead Poet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ash:   #2c2824;
+  --ash2:  #312d28;
+  --ash3:  #252220;
+  --gold:  #c8b87a;
+  --gold2: #a89458;
+  --white: rgba(245,240,230,0.95);
+  --muted: rgba(235,225,205,0.85);
+  --faint: rgba(200,184,122,0.55);
+  --border:rgba(200,184,122,0.12);
+  --red:   rgba(139,26,26,0.7);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#2c2824 !important;color:var(--white);font-family:'Cormorant Garamond',serif;overflow-x:hidden}
+
+/* noise */
+body::before{content:'';position:fixed;inset:0;opacity:.025;pointer-events:none;z-index:999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:22px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);background:rgba(44,40,36,.95);backdrop-filter:blur(12px)}
+.nav-logo{font-family:'Cinzel',serif;font-size:12px;letter-spacing:6px;color:var(--gold);text-decoration:none;text-transform:uppercase}
+.nav-center{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--faint);position:absolute;left:50%;transform:translateX(-50%)}
+.nav-back{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold2);text-decoration:none;opacity:.7;transition:opacity .3s}
+.nav-back:hover{opacity:1}
+@media(max-width:600px){nav{padding:18px 20px}.nav-center{display:none}}
+
+/* hero */
+.hero{min-height:60vh;background:#2c2824;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:140px 40px 80px;position:relative}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:6px;
+  text-transform:uppercase;color:var(--gold);margin-bottom:28px;
+  opacity:0;animation:fadeUp 1s ease .3s forwards}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(42px,8vw,88px);font-weight:900;
+  letter-spacing:6px;color:var(--white);line-height:1;margin-bottom:24px;
+  opacity:0;animation:fadeUp 1.2s ease .5s forwards}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);font-style:italic;color:var(--muted);
+  max-width:480px;line-height:1.9;opacity:0;animation:fadeUp 1s ease .8s forwards}
+.hero-count{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:5px;
+  text-transform:uppercase;color:var(--faint);margin-top:40px;
+  opacity:0;animation:fadeUp 1s ease 1.1s forwards}
+
+/* filter bar */
+.filter-bar{background:#2c2824;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:20px 48px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  position:sticky;top:65px;z-index:50}
+.filter-btn{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--faint);border:1px solid var(--border);background:transparent;
+  padding:8px 16px;cursor:pointer;transition:all .25s}
+.filter-btn:hover,.filter-btn.active{color:var(--gold);border-color:rgba(200,184,122,.4)}
+.filter-count{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;
+  color:var(--faint);margin-left:auto}
+@media(max-width:600px){.filter-bar{padding:16px 20px;top:56px}}
+
+/* grid */
+.grid-wrap{background:#2c2824;padding:2px}
+.angels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:2px;
+  max-width:1400px;margin:0 auto;padding:2px}
+@media(max-width:600px){.angels-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* angel card */
+.angel-card{background:var(--ash2);border:1px solid var(--border);
+  padding:28px 20px;cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color .3s,background .3s;aspect-ratio:3/4;
+  display:flex;flex-direction:column;justify-content:flex-end}
+
+.angel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(200,184,122,.15),transparent);
+  transition:opacity .3s}
+
+.angel-card:hover{background:#35302b;border-color:rgba(200,184,122,.3)}
+.angel-card:hover::before{opacity:1}
+
+/* card number */
+.card-num{position:absolute;top:16px;right:16px;font-family:'DM Mono',monospace;
+  font-size:7px;letter-spacing:2px;color:rgba(200,184,122,.3)}
+
+/* card glyph — the sigil placeholder */
+.card-glyph{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);
+  font-family:'Cinzel',serif;font-size:clamp(28px,4vw,42px);
+  color:rgba(200,184,122,.08);letter-spacing:0;transition:color .3s;
+  user-select:none;pointer-events:none}
+.angel-card:hover .card-glyph{color:rgba(200,184,122,.15)}
+
+/* survived tag */
+.card-survived{position:absolute;top:14px;left:14px;
+  font-family:'DM Mono',monospace;font-size:6px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold2);opacity:.7}
+
+/* removed tag */
+.card-removed{position:absolute;top:14px;left:14px;
+  font-family:'DM Mono',monospace;font-size:6px;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(139,26,26,.7)}
+
+/* card content */
+.card-name{font-family:'Cinzel',serif;font-size:clamp(13px,1.4vw,16px);
+  letter-spacing:3px;color:var(--white);margin-bottom:6px;
+  position:relative;z-index:1}
+.card-domain{font-size:clamp(10px,1.1vw,12px);font-style:italic;
+  color:var(--muted);opacity:.7;line-height:1.5;position:relative;z-index:1}
+.card-source{font-family:'DM Mono',monospace;font-size:6px;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(200,184,122,.35);margin-top:8px;
+  position:relative;z-index:1}
+
+/* REMOVED styling — name struck through */
+.angel-card.removed .card-name{
+  position:relative;color:rgba(245,240,230,.55)}
+.angel-card.removed .card-name::after{
+  content:'';position:absolute;left:0;right:0;top:50%;
+  height:1px;background:rgba(139,26,26,.6);transform:translateY(-50%)}
+
+/* modal overlay */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,18,16,.92);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .35s;backdrop-filter:blur(8px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+
+.modal{background:var(--ash2);border:1px solid rgba(200,184,122,.2);
+  max-width:540px;width:90%;padding:52px 48px;position:relative;
+  transform:translateY(20px);transition:transform .35s;max-height:85vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:translateY(0)}
+
+.modal-close{position:absolute;top:20px;right:24px;background:none;border:none;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;
+  color:var(--faint);cursor:pointer;text-transform:uppercase;transition:color .3s}
+.modal-close:hover{color:var(--gold)}
+
+.modal-num{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:4px;
+  color:var(--gold2);margin-bottom:16px;display:block}
+.modal-status{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:24px;display:block}
+.modal-status.removed{color:rgba(180,60,60,.9)}
+.modal-status.survived{color:var(--gold2)}
+
+.modal-name{font-family:'Cinzel',serif;font-size:clamp(28px,5vw,44px);
+  font-weight:600;letter-spacing:4px;color:var(--white);margin-bottom:8px;line-height:1}
+.modal-name.removed-name{position:relative;display:inline-block}
+.modal-name.removed-name::after{content:'';position:absolute;left:0;right:0;
+  top:50%;height:2px;background:rgba(160,40,40,.6);transform:translateY(-50%)}
+
+.modal-divider{width:40px;height:1px;background:rgba(200,184,122,.3);margin:24px 0}
+
+.modal-domain-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:4px;
+  text-transform:uppercase;color:var(--gold2);margin-bottom:8px;display:block}
+.modal-domain{font-size:clamp(16px,2vw,20px);font-style:italic;color:var(--muted);
+  line-height:1.8;margin-bottom:24px}
+.modal-source-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:4px;
+  text-transform:uppercase;color:var(--faint);margin-bottom:6px;display:block}
+.modal-source{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;
+  color:var(--faint)}
+.modal-note{font-size:clamp(13px,1.5vw,15px);font-style:italic;color:rgba(235,225,205,.55);
+  line-height:1.8;margin-top:20px;border-top:1px solid var(--border);padding-top:20px}
+
+@media(max-width:600px){.modal{padding:36px 28px}}
+
+/* closing */
+.page-close{background:#2c2824;border-top:1px solid var(--border);
+  text-align:center;padding:80px 48px 100px}
+.close-title{font-family:'Cinzel',serif;font-size:clamp(22px,4vw,40px);
+  font-weight:600;letter-spacing:4px;color:var(--white);margin-bottom:20px}
+.close-body{font-size:clamp(15px,1.7vw,18px);font-style:italic;color:var(--muted);
+  max-width:460px;margin:0 auto 40px;line-height:1.9}
+.btn-ghost{display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;
+  text-transform:uppercase;color:var(--white);border:1px solid rgba(200,184,122,.3);
+  padding:16px 44px;text-decoration:none;transition:border-color .3s,color .3s;margin:6px}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ghost--gold{border-color:var(--gold);color:var(--gold)}
+
+/* footer */
+footer{background:#2c2824;border-top:1px solid var(--border);padding:32px 48px;
+  text-align:center;font-family:'DM Mono',monospace;font-size:8px;
+  letter-spacing:3px;text-transform:uppercase;color:var(--faint)}
+footer a{color:var(--gold2);text-decoration:none;opacity:.7;margin:0 12px;transition:opacity .3s}
+footer a:hover{opacity:1}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Dead Poet</a>
+  <span class="nav-center">The Angels</span>
+  <a href="index.html" class="nav-back">← Return</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-eyebrow">The Record</p>
+  <h1 class="hero-title">100 Angels.</h1>
+  <p class="hero-sub">Named in the oldest texts of human history. Removed from scripture in 382 AD. Remembered here.</p>
+  <p class="hero-count">98 Removed &nbsp;·&nbsp; 2 Survived &nbsp;·&nbsp; 100 Total</p>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="removed">Removed</button>
+  <button class="filter-btn" data-filter="survived">Survived</button>
+  <button class="filter-btn" data-filter="enoch">Book of Enoch</button>
+  <button class="filter-btn" data-filter="kabbalah">Kabbalah</button>
+  <span class="filter-count" id="filter-count">100 angels</span>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="angels-grid" id="angels-grid"></div>
+</div>
+
+<!-- CLOSING -->
+<div class="page-close reveal">
+  <h2 class="close-title">The garments are coming.</h2>
+  <p class="close-body">One hundred linen shirts. One hundred Soul records. Each one named for an angel that was removed.</p>
+  <a href="movement.html" class="btn-ghost btn-ghost--gold">The Movement</a>
+  <a href="erasure.html" class="btn-ghost">The Erasure</a>
+</div>
+
+<footer>
+  <a href="index.html">Dead Poet</a>
+  <a href="erasure.html">The Erasure</a>
+  <a href="movement.html">The Movement</a>
+  <span style="opacity:.4">© 2026 Dead Poet. All Rights Reserved.</span>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close">✕ Close</button>
+    <span class="modal-num" id="modal-num"></span>
+    <span class="modal-status" id="modal-status"></span>
+    <h2 class="modal-name" id="modal-name"></h2>
+    <div class="modal-divider"></div>
+    <span class="modal-domain-label">Domain</span>
+    <p class="modal-domain" id="modal-domain"></p>
+    <span class="modal-source-label">Source</span>
+    <p class="modal-source" id="modal-source"></p>
+    <p class="modal-note" id="modal-note"></p>
+  </div>
+</div>
+
+<script>
+// ── ANGEL DATA ────────────────────────────────────────────
+const ANGELS = [
+  // THE 7 HOLY WATCHERS — Book of Enoch Chapter 20
+  { n:1,  name:"Uriel",     domain:"Light · Fire · Tartarus",              source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"removed",  note:"One of the seven holy angels. Set over the world and over Tartarus. Guide to Enoch on his celestial journeys. Excluded from the Roman canon, 382 AD." },
+  { n:2,  name:"Raphael",   domain:"Healing · Spirits of Men",             source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"removed",  note:"One of the seven holy angels. Presides over the spirits of men. Named in the Book of Tobit — one of only two books where his name survived into partial canonical use." },
+  { n:3,  name:"Raguel",    domain:"Justice · Vengeance on the World",     source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"removed",  note:"One of the seven holy angels. Takes vengeance on the world of the luminaries. Fully excluded from canon." },
+  { n:4,  name:"Michael",   domain:"Protector of Mankind · Chaos",         source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"survived", note:"One of two angels who survived the Council of Rome. Protector, warrior, head of the angelic army. Named throughout the Old and New Testaments." },
+  { n:5,  name:"Saraqael",  domain:"Spirits Who Sin · The Moon",           source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"removed",  note:"One of the seven holy angels. Set over the spirits of those who sin. Excluded from canon." },
+  { n:6,  name:"Gabriel",   domain:"Paradise · The Cherubim",              source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"survived", note:"One of two angels who survived the Council of Rome. Messenger of God — announced the births of John the Baptist and Jesus. Named in both Old and New Testaments." },
+  { n:7,  name:"Remiel",    domain:"Souls Awaiting Resurrection",          source:"Book of Enoch, Ch. 20",    tier:"watcher",  status:"removed",  note:"One of the seven holy angels. Set over those who rise. Fully excluded from canon." },
+
+  // WATCHER LEADERS — Book of Enoch Chapter 6
+  { n:8,  name:"Samyaza",   domain:"Leader of the Watchers",               source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Leader of the 200 Watchers who descended to Mount Hermon. First to lead the fall from heaven." },
+  { n:9,  name:"Azazel",    domain:"Metalwork · Weapons · Forbidden Arts", source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Taught humanity to forge swords and shields. Taught women the art of cosmetics. Symbol of forbidden knowledge given too soon." },
+  { n:10, name:"Kokabiel",  domain:"Stars · Astrology",                    source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Commander of 365,000 spirits. Instructor of astrology. In the Book of Raziel, considered a high-ranking holy angel." },
+  { n:11, name:"Armaros",   domain:"Resolving of Enchantments",            source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Taught humanity how to resolve enchantments — to undo what had been bound." },
+  { n:12, name:"Baraqel",   domain:"Lightning · Storms",                   source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Angel of lightning. One of the leaders of the Watchers." },
+  { n:13, name:"Araqiel",   domain:"Signs of the Earth · Geomancy",        source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Taught the signs of the earth to humanity. Also named in the Sibylline Oracles as a guide of souls to judgment." },
+  { n:14, name:"Shamsiel",  domain:"Signs of the Sun",                     source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Angel of the sun. Teaches the signs hidden within its course." },
+  { n:15, name:"Sariel",    domain:"The Moon · Healing",                   source:"Book of Enoch / Dead Sea Scrolls", tier:"fallen", status:"removed", note:"Angel of the moon. Named in the Dead Sea Scrolls — his name appears on the shields of the Sons of Light." },
+  { n:16, name:"Tamiel",    domain:"The Deep Sea",                         source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Presides over the depths of the sea." },
+  { n:17, name:"Turiel",    domain:"The Mountains",                        source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Governor of mountains." },
+  { n:18, name:"Rumyal",    domain:"Omens",                                source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Taught the reading of omens." },
+  { n:19, name:"Danjal",    domain:"Palm Reading · Signs of God",          source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Taught divination through reading the signs of the body." },
+  { n:20, name:"Neqael",    domain:"Signs of Heaven",                      source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Reader of the signs written in the sky." },
+  { n:21, name:"Batariel",  domain:"Valley of God",                        source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Governor of the valley." },
+  { n:22, name:"Ananiel",   domain:"Rain · Nature of the Earth",           source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Governs the rain and the nature of the earth." },
+  { n:23, name:"Zaqiel",    domain:"Clouds",                               source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Commands the clouds." },
+  { n:24, name:"Samsapeel", domain:"The Sun's Course",                     source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Governs the path of the sun across the sky." },
+  { n:25, name:"Satariel",  domain:"Hidden Things",                        source:"Book of Enoch, Ch. 6",     tier:"fallen",   status:"removed",  note:"Watcher. Keeper of that which is concealed." },
+  { n:26, name:"Yeqon",     domain:"First Tempter · The Fall",             source:"Book of Enoch, Ch. 69",    tier:"fallen",   status:"removed",  note:"The first Watcher to tempt the others into descending. Ringleader of the fall." },
+  { n:27, name:"Asbeel",    domain:"Evil Counsel",                         source:"Book of Enoch, Ch. 69",    tier:"fallen",   status:"removed",  note:"Gave evil counsel to the holy angels. Led them to corrupt themselves." },
+  { n:28, name:"Gadreel",   domain:"War · Weapons · Death",                source:"Book of Enoch, Ch. 69",    tier:"fallen",   status:"removed",  note:"Taught the use of weapons and the art of killing. One of the five identified as individual satans in Enoch." },
+  { n:29, name:"Penemue",   domain:"Writing · Ink and Paper · Wisdom",     source:"Book of Enoch, Ch. 69",    tier:"fallen",   status:"removed",  note:"Taught humanity the art of writing with ink and paper, and the bitter and the sweet, and the secrets of wisdom." },
+  { n:30, name:"Kasdaye",   domain:"The Womb · Spirit of the Serpent",     source:"Book of Enoch, Ch. 69",    tier:"fallen",   status:"removed",  note:"Showed the children of men all the evil strikes of spirits and demons, and the smitings of the embryo in the womb." },
+  { n:31, name:"Phanuel",   domain:"Hope · Those Who Repent",              source:"Book of Enoch, Ch. 40",    tier:"watcher",  status:"removed",  note:"One of the four presences before God. Set over repentance and hope of those who inherit eternal life." },
+  { n:32, name:"Hananel",   domain:"Grace · Mercy",                        source:"Book of Enoch",            tier:"watcher",  status:"removed",  note:"Angel of grace and mercy. Named in the Book of Enoch." },
+
+  // DEAD SEA SCROLLS & ADDITIONAL ENOCH
+  { n:33, name:"Eremiel",   domain:"The Abyss · The Underworld",           source:"Dead Sea Scrolls",         tier:"scrolls",  status:"removed",  note:"Named in the Dead Sea Scrolls. Angel of the abyss." },
+  { n:34, name:"Nuriel",    domain:"Fire · Hailstorms",                    source:"Dead Sea Scrolls / Sefer Raziel", tier:"scrolls", status:"removed", note:"Angel of fire and hailstorms. Named in both the Dead Sea Scrolls and Sefer Raziel HaMalakh." },
+  { n:35, name:"Galgaliel", domain:"The Wheel of the Sun",                 source:"Sefer Raziel HaMalakh",    tier:"scrolls",  status:"removed",  note:"Governs the wheel of the sun. Named in Sefer Raziel." },
+  { n:36, name:"Ophaniel",  domain:"The Wheels of Heaven",                 source:"Book of Enoch / Sefer Raziel", tier:"scrolls", status:"removed", note:"Governs the Ophanim — the wheels of heaven described in Ezekiel's vision." },
+  { n:37, name:"Nathanael", domain:"Fire Sent Against the Wicked",         source:"Book of Enoch",            tier:"scrolls",  status:"removed",  note:"Angel of fire. Executes judgment." },
+  { n:38, name:"Raziel",    domain:"Secrets of God · Mysteries",           source:"Sefer Raziel HaMalakh",    tier:"scrolls",  status:"removed",  note:"The angel of mysteries. Stands beside God's throne, hearing and recording all secrets. Delivered the Book of Raziel to Adam. Keeper of the very knowledge that preserved the other angels." },
+
+  // 72 ANGELS OF THE SHEM HAMEPHORASH — Kabbalistic tradition
+  // Each governs 5 degrees of the zodiac. Documented in Sefer Raziel HaMalakh.
+  { n:39, name:"Vehuiah",   domain:"Will · New Beginnings",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"First of the 72. Governs new beginnings and the will to create." },
+  { n:40, name:"Jeliel",    domain:"Love · Wisdom",                        source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Second of the 72. Angel of love and wisdom." },
+  { n:41, name:"Sitael",    domain:"Construction · Nature",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Third of the 72. Governs the construction of the natural world." },
+  { n:42, name:"Elemiah",   domain:"Internal Power · Travel",              source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fourth of the 72. Angel of internal power and safe journeys." },
+  { n:43, name:"Mahasiah",  domain:"Rectification · Peace",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifth of the 72. Angel of rectification — restoring what has been broken." },
+  { n:44, name:"Lelahel",   domain:"Light · Understanding",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Sixth of the 72. Bearer of divine light and understanding." },
+  { n:45, name:"Achaiah",   domain:"Patience · Discovery",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Seventh of the 72. Angel of patience and the discovery of hidden things." },
+  { n:46, name:"Cahetel",   domain:"Blessings · Agriculture",              source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Eighth of the 72. Governs blessings and the fertility of the earth." },
+  { n:47, name:"Haziel",    domain:"Mercy · Forgiveness",                  source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Ninth of the 72. Angel of unconditional mercy." },
+  { n:48, name:"Aladiah",   domain:"Grace · Good Fortune",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Tenth of the 72. Angel of grace and unexpected good fortune." },
+  { n:49, name:"Lauviah",   domain:"Victory · Renown",                     source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Eleventh of the 72. Angel of victory." },
+  { n:50, name:"Hahaiah",   domain:"Refuge · Shelter",                     source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twelfth of the 72. Offers shelter to those who seek it." },
+  { n:51, name:"Yezalel",   domain:"Fidelity · Memory",                    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirteenth of the 72. Angel of faithfulness and the preservation of memory." },
+  { n:52, name:"Mebahel",   domain:"Truth · Liberty · Justice",            source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fourteenth of the 72. Guardian of truth and justice." },
+  { n:53, name:"Hariel",    domain:"Sciences · Arts",                      source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifteenth of the 72. Angel of the sciences and creative arts." },
+  { n:54, name:"Hakamiah",  domain:"Loyalty · Courage",                    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Sixteenth of the 72. Angel of loyalty." },
+  { n:55, name:"Laviah",    domain:"Revelation · Praise",                  source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Seventeenth of the 72. Angel of divine revelation." },
+  { n:56, name:"Caliel",    domain:"Justice · Trials",                     source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Eighteenth of the 72. Governs trials and the pursuit of justice." },
+  { n:57, name:"Leuviah",   domain:"Memory · Intelligence",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Nineteenth of the 72. Angel of memory and expanded intelligence." },
+  { n:58, name:"Pahaliah",  domain:"Redemption · Religion",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twentieth of the 72. Angel of redemption." },
+  { n:59, name:"Nelkhael",  domain:"Knowledge · Astronomy",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-first of the 72. Angel of learning and the study of the stars." },
+  { n:60, name:"Yeiayel",   domain:"Clairvoyance · Renown",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-second of the 72. Angel of renown and foresight." },
+  { n:61, name:"Melahel",   domain:"Healing · Water",                      source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-third of the 72. Governs healing and the flow of water." },
+  { n:62, name:"Chaheuiah", domain:"Preservation · Protection",            source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-fourth of the 72. Angel of preservation." },
+  { n:63, name:"Nithaiah",  domain:"Poetry · Wisdom",                      source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-fifth of the 72. Angel of poetry and secret wisdom." },
+  { n:64, name:"Haaiah",    domain:"Hidden Things · Political Science",    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-sixth of the 72. Reveals what is concealed." },
+  { n:65, name:"Yeratel",   domain:"Light · Civilization",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-seventh of the 72. Spreads the light of civilisation." },
+  { n:66, name:"Seheiah",   domain:"Longevity · Protection from Fire",     source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-eighth of the 72. Guardian against destruction." },
+  { n:67, name:"Reiyel",    domain:"Liberation · Mystical States",         source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Twenty-ninth of the 72. Angel of liberation from that which binds." },
+  { n:68, name:"Omael",     domain:"Patience · The Animal Kingdom",        source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirtieth of the 72. Governs patience and all living creatures." },
+  { n:69, name:"Lecabel",   domain:"Vegetation · Agriculture",             source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-first of the 72. Governs the growth of things from the earth." },
+  { n:70, name:"Vasariah",  domain:"Clemency · Justice",                   source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-second of the 72. Angel of clemency." },
+  { n:71, name:"Yehudiah",  domain:"Service · Humility",                   source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-third of the 72. Angel of humble service." },
+  { n:72, name:"Lehahiah",  domain:"Obedience · Calm",                     source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-fourth of the 72. Governs obedience and inner calm." },
+  { n:73, name:"Chavakiah", domain:"Reconciliation · Family",              source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-fifth of the 72. Restores bonds between those who are separated." },
+  { n:74, name:"Menadel",   domain:"Work · Vocation",                      source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-sixth of the 72. Angel of work and the calling of the soul." },
+  { n:75, name:"Aniel",     domain:"Breaking Patterns · Courage",          source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-seventh of the 72. Breaks the cycles that bind." },
+  { n:76, name:"Haamiah",   domain:"Ritual · The Search for Truth",        source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-eighth of the 72. Governs sacred ritual and the seeker of truth." },
+  { n:77, name:"Rehael",    domain:"Submission · Healing",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Thirty-ninth of the 72. Angel of healing through surrender." },
+  { n:78, name:"Ieiazel",   domain:"Arts · Freedom from Enemies",          source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fortieth of the 72. Protector of artists and the creative spirit." },
+  { n:79, name:"Hahahel",   domain:"Mission · Faith",                      source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-first of the 72. Angel of mission and unwavering faith." },
+  { n:80, name:"Mikael",    domain:"Political Order · Safe Travel",        source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-second of the 72. Governs political order and safe passage." },
+  { n:81, name:"Veuliah",   domain:"Prosperity · Dominion",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-third of the 72. Angel of abundance and dominion over the material world." },
+  { n:82, name:"Yelahiah",  domain:"Warrior Angels · Karma",               source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-fourth of the 72. Governs karma and the warriors of heaven." },
+  { n:83, name:"Sealiah",   domain:"Motivation · Will to Live",            source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-fifth of the 72. Restores the will and the desire to continue." },
+  { n:84, name:"Ariel",     domain:"Perception · Nature",                  source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-sixth of the 72. Angel of perception and the natural world." },
+  { n:85, name:"Asaliah",   domain:"Contemplation · Justice",              source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-seventh of the 72. Angel of contemplation and divine justice." },
+  { n:86, name:"Mihael",    domain:"Fertility · Peace",                    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-eighth of the 72. Governs peace between people and the fertility of the earth." },
+  { n:87, name:"Vehuel",    domain:"Sorrow · Elevation",                   source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Forty-ninth of the 72. Transforms sorrow into elevation of the spirit." },
+  { n:88, name:"Daniel",    domain:"Eloquence · Mercy",                    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fiftieth of the 72. Angel of eloquence and divine mercy." },
+  { n:89, name:"Hahasiah",  domain:"Universal Medicine · Alchemy",         source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-first of the 72. Angel of alchemy and the medicine of the soul." },
+  { n:90, name:"Imamiah",   domain:"Atonement · Strength",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-second of the 72. Governs atonement and the strength to carry it." },
+  { n:91, name:"Nanael",    domain:"Spiritual Communication",              source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-third of the 72. Angel of communication between worlds." },
+  { n:92, name:"Nithael",   domain:"Eternal Youth · Legacy",               source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-fourth of the 72. Governs legacy and the preservation of what matters." },
+  { n:93, name:"Mebahiah",  domain:"Morality · Clarity",                   source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-fifth of the 72. Angel of moral clarity." },
+  { n:94, name:"Poyel",     domain:"Fortune · Support",                    source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-sixth of the 72. Governs fortune and the support of others." },
+  { n:95, name:"Nemamiah",  domain:"Discernment · Strategy",               source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-seventh of the 72. Angel of discernment and strategic thought." },
+  { n:96, name:"Yeialel",   domain:"Mental Force · Courage",               source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-eighth of the 72. Governs mental strength and the courage to act." },
+  { n:97, name:"Harahel",   domain:"Knowledge · Libraries",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Fifty-ninth of the 72. Angel of libraries and the preservation of knowledge." },
+  { n:98, name:"Mitzrael",  domain:"Reparation · Loyalty",                 source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Sixtieth of the 72. Governs the repair of what has been broken." },
+  { n:99, name:"Umabel",    domain:"Friendship · Affinity",                source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Sixty-first of the 72. Angel of friendship and the bonds between souls." },
+  { n:100,name:"Iahhel",    domain:"Meditation · Solitude · Wisdom",       source:"Shem HaMephorash",         tier:"kabbalah", status:"removed",  note:"Sixty-second of the 72. Angel of meditation and the wisdom found in silence. The hundredth and final name recovered." },
+];
+
+// sigil glyphs per tier
+const GLYPHS = {
+  watcher:  ['✦','✧','⊕','⊗','⊘'],
+  fallen:   ['✕','✗','⊠','⊡','◈'],
+  scrolls:  ['◉','◎','⊙','⊛','⊝'],
+  kabbalah: ['◇','◆','⟡','⬡','⬢'],
+};
+
+function glyph(tier){ const g=GLYPHS[tier]||GLYPHS.kabbalah; return g[Math.floor(Math.random()*g.length)]; }
+
+// source → filter key
+function filterKey(a){
+  if(a.tier==='kabbalah') return 'kabbalah';
+  return 'enoch';
+}
+
+// ── BUILD GRID ────────────────────────────────────────────
+let currentFilter = 'all';
+const grid = document.getElementById('angels-grid');
+const countEl = document.getElementById('filter-count');
+
+function buildGrid(filter){
+  grid.innerHTML = '';
+  const visible = ANGELS.filter(a => {
+    if(filter==='all') return true;
+    if(filter==='removed') return a.status==='removed';
+    if(filter==='survived') return a.status==='survived';
+    if(filter==='enoch') return filterKey(a)==='enoch';
+    if(filter==='kabbalah') return filterKey(a)==='kabbalah';
+    return true;
+  });
+  countEl.textContent = visible.length + ' angel' + (visible.length!==1?'s':'');
+  visible.forEach((a,i) => {
+    const card = document.createElement('div');
+    card.className = 'angel-card' + (a.status==='removed'?' removed':'');
+    card.style.animationDelay = (i*0.015)+'s';
+    card.innerHTML = `
+      <span class="card-num">${String(a.n).padStart(3,'0')}</span>
+      <div class="card-glyph">${glyph(a.tier)}</div>
+      <span class="${a.status==='survived'?'card-survived':'card-removed'}">${a.status==='survived'?'Survived':'Removed'}</span>
+      <div class="card-content">
+        <div class="card-name">${a.name}</div>
+        <div class="card-domain">${a.domain}</div>
+        <div class="card-source">${a.source.split(',')[0]}</div>
+      </div>
+    `;
+    card.addEventListener('click', ()=>openModal(a));
+    grid.appendChild(card);
+  });
+}
+
+// ── FILTER BUTTONS ────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    buildGrid(currentFilter);
+  });
+});
+
+// ── MODAL ─────────────────────────────────────────────────
+const overlay = document.getElementById('modal-overlay');
+const modalClose = document.getElementById('modal-close');
+
+function openModal(a){
+  document.getElementById('modal-num').textContent = 'Angel ' + String(a.n).padStart(3,'0');
+  const statusEl = document.getElementById('modal-status');
+  statusEl.textContent = a.status==='survived' ? '✦ Survived the Canon' : '✕ Removed · 382 AD';
+  statusEl.className = 'modal-status ' + a.status;
+  const nameEl = document.getElementById('modal-name');
+  nameEl.textContent = a.name;
+  nameEl.className = 'modal-name' + (a.status==='removed'?' removed-name':'');
+  document.getElementById('modal-domain').textContent = a.domain;
+  document.getElementById('modal-source').textContent = a.source;
+  document.getElementById('modal-note').textContent = a.note;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+modalClose.addEventListener('click', closeModal);
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+// ── SCROLL REVEAL ─────────────────────────────────────────
+const revEls = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }});
+},{threshold:0.1});
+revEls.forEach(el=>obs.observe(el));
+
+// ── INIT ──────────────────────────────────────────────────
+buildGrid('all');
+</script>
+</body>
+</html>

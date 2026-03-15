@@ -1,0 +1,317 @@
+<!--
+  Dead Poet — The Erasure
+  deadpoet.xyz/erasure.html
+
+  COPY NOTES FOR GAVIN:
+  Every editable section is marked with:
+  <!-- ✏️ COPY: [what it is] — edit freely -->
+  The structure and design are locked. Just swap the words.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Erasure · Dead Poet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ash:   #2c2824;
+  --ash2:  #332e29;
+  --gold:  #c8b87a;
+  --gold2: #a89458;
+  --white: rgba(245,240,230,0.92);
+  --muted: rgba(235,225,205,0.92);
+  --faint: rgba(200,184,122,0.75);
+  --red:   #d45555;
+  --border:rgba(200,184,122,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+html{background:#2c2824}
+body{background:#2c2824;background:var(--ash);color:var(--white);font-family:'Cormorant Garamond',serif;overflow-x:hidden}
+
+/* noise */
+body::before{content:'';position:fixed;inset:0;opacity:.03;pointer-events:none;z-index:999;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+background-size:200px 200px}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:22px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);background:rgba(44,40,36,.92);backdrop-filter:blur(12px)}
+.nav-logo{font-family:'Cinzel',serif;font-size:12px;letter-spacing:6px;color:var(--gold);text-decoration:none;text-transform:uppercase}
+.nav-center{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);
+  position:absolute;left:50%;transform:translateX(-50%)}
+.nav-back{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold2);text-decoration:none;opacity:.7;transition:opacity .3s}
+.nav-back:hover{opacity:1}
+@media(max-width:600px){nav{padding:18px 20px}.nav-center{display:none}}
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:120px 40px 80px;position:relative;overflow:hidden;background:#2c2824}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:6px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:28px;opacity:0;animation:fadeUp 1s ease .3s forwards}
+.hero-title{font-family:'Cinzel',serif;font-size:clamp(44px,9vw,96px);font-weight:900;
+  letter-spacing:6px;color:var(--white);line-height:1;margin-bottom:12px;
+  opacity:0;animation:fadeUp 1.2s ease .5s forwards}
+.hero-title .word-removed{position:relative;display:inline-block}
+.hero-title .word-removed::after{content:'';position:absolute;left:-2px;right:-2px;top:50%;
+  height:3px;background:var(--red);transform:translateY(-50%) scaleX(0);transform-origin:left;
+  animation:strikeIn 1s ease 1.9s forwards}
+@keyframes strikeIn{to{transform:translateY(-50%) scaleX(1)}}
+.hero-sub{font-size:clamp(16px,2.2vw,21px);font-style:italic;color:var(--muted);
+  max-width:540px;line-height:1.9;opacity:0;animation:fadeUp 1s ease .9s forwards}
+.hero-date{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:5px;
+  color:rgba(180,80,80,.95);margin-top:48px;opacity:0;animation:fadeUp 1s ease 1.2s forwards}
+.scroll-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--faint);opacity:0;animation:fadeUp 1s ease 2.2s forwards}
+
+/* sections */
+html,body{background:#2c2824 !important}
+.section-wrap{background:#2c2824;width:100%}
+.section{padding:90px 48px;border-top:1px solid var(--border);max-width:860px;margin:0 auto}
+@media(max-width:600px){.section{padding:64px 24px}}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .85s ease,transform .85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.rd1{transition-delay:.12s}.rd2{transition-delay:.24s}.rd3{transition-delay:.36s}
+
+/* labels */
+.label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:5px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:18px;display:block}
+
+/* headings */
+.statement{font-family:'Cinzel',serif;font-size:clamp(20px,3.2vw,34px);font-weight:400;
+  letter-spacing:2px;color:var(--white);line-height:1.45;margin-bottom:28px}
+
+/* body */
+.body{font-size:clamp(17px,2vw,20px);font-style:italic;color:var(--muted);line-height:1.95;max-width:660px}
+.body+.body{margin-top:20px}
+
+/* pull quote */
+.quote{margin:56px 0;padding:0 0 0 28px;border-left:1px solid rgba(200,184,122,.3)}
+.quote p{font-size:clamp(19px,2.8vw,27px);font-style:italic;color:var(--white);line-height:1.8;font-weight:400}
+.quote cite{display:block;font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--gold2);margin-top:14px;font-style:normal}
+
+/* timeline */
+.timeline{margin:48px 0;padding-left:28px;position:relative}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--border) 10%,var(--border) 90%,transparent)}
+.tl-item{margin-bottom:44px;position:relative}
+.tl-item::before{content:'';position:absolute;left:-32px;top:7px;width:5px;height:5px;
+  border-radius:50%;background:var(--gold);opacity:.5}
+.tl-year{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:4px;color:var(--gold);
+  margin-bottom:7px;display:block}
+.tl-event{font-family:'Cinzel',serif;font-size:clamp(13px,1.6vw,17px);letter-spacing:1px;
+  color:var(--white);margin-bottom:8px;line-height:1.4}
+.tl-detail{font-size:clamp(13px,1.4vw,15px);font-style:italic;color:var(--muted);line-height:1.85}
+
+/* struck names grid */
+.names-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px;margin:44px 0}
+.nc{padding:22px 18px;background:var(--ash2);border:1px solid var(--border);
+  position:relative;overflow:hidden;transition:border-color .3s}
+.nc:hover{border-color:rgba(200,184,122,.22)}
+.nc-name{font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;
+  color:rgba(245,240,230,.7);display:block;margin-bottom:5px;position:relative}
+.nc-name::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;
+  background:rgba(180,60,60,.65);transform:translateY(-50%)}
+.nc-domain{font-size:11px;font-style:italic;color:rgba(200,184,122,.6)}
+.nc-source{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:2px;
+  color:rgba(180,80,80,.65);margin-top:8px;display:block;text-transform:uppercase}
+
+/* redacted block */
+.redacted{margin:48px 0;padding:36px 44px;border:1px solid rgba(139,26,26,.18);
+  background:rgba(139,26,26,.04);position:relative}
+.redacted::before,.redacted::after{content:'';position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(139,26,26,.35),transparent)}
+.redacted::before{top:0}.redacted::after{bottom:0}
+.redacted-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:4px;
+  text-transform:uppercase;color:rgba(180,80,80,.85);margin-bottom:14px;display:block}
+.redacted-text{font-family:'Cinzel',serif;font-size:clamp(14px,2vw,19px);
+  color:rgba(245,240,230,0.65);line-height:1.7;position:relative}
+.redacted-text::after{content:'';position:absolute;left:0;right:0;top:50%;
+  height:2px;background:rgba(200,70,70,.7);transform:translateY(-50%)}
+
+/* closing */
+.closing{text-align:center;padding:90px 48px 120px;border-top:1px solid var(--border);
+  max-width:860px;margin:0 auto}
+.closing-title{font-family:'Cinzel',serif;font-size:clamp(26px,4.5vw,50px);font-weight:600;
+  letter-spacing:4px;color:var(--white);margin-bottom:22px;line-height:1.25}
+.closing-body{font-size:clamp(14px,1.7vw,18px);font-style:italic;color:var(--muted);
+  max-width:520px;margin:0 auto 44px;line-height:1.95}
+.btn-ghost{display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;
+  text-transform:uppercase;color:var(--white);border:1px solid rgba(200,184,122,.3);
+  padding:16px 48px;text-decoration:none;transition:border-color .3s,color .3s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+/* footer */
+footer{background:#2c2824;border-top:1px solid var(--border);padding:36px 48px;text-align:center;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--faint)}
+footer a{color:var(--gold2);text-decoration:none;opacity:.7;margin:0 14px;transition:opacity .3s}
+footer a:hover{opacity:1}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Dead Poet</a>
+  <span class="nav-center">The Erasure</span>
+  <a href="index.html" class="nav-back">← Return</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <!-- ✏️ COPY: Eyebrow label above the title -->
+  <p class="hero-eyebrow">The Historical Record</p>
+
+  <!-- ✏️ COPY: Main hero title. "Removed" gets the red strikethrough automatically. -->
+  <h1 class="hero-title">They Were <span class="word-removed">Removed</span></h1>
+
+  <!-- ✏️ COPY: Hero subtext — the one-paragraph summary of the whole page. -->
+  <p class="hero-sub">
+    One hundred angels named in the oldest texts of human history.
+    Named, documented, venerated. Then struck from the record.
+    Not lost. Not disproven. Deliberately removed.
+  </p>
+
+  <!-- ✏️ COPY: Date stamp. The key historical moment. -->
+  <p class="hero-date">Council of Rome · 382 AD</p>
+  <span class="scroll-hint">↓ Read the record</span>
+</div>
+
+<div style="background:#2c2824;width:100%">
+
+<!-- SECTION 1: BEFORE -->
+<div class="section">
+  <div class="reveal">
+    <span class="label">Before</span>
+    <h2 class="statement">The earliest civilisations named them.</h2>
+  </div>
+  <div class="quote reveal rd1">
+    <p>The Book of Enoch. 3rd century BC.
+    One hundred angels. Named. Documented. Scripture.</p>
+  </div>
+  <div class="quote reveal rd2">
+    <p>They were not mythology. Not metaphor.
+    They were as real as time and stone.</p>
+  </div>
+</div>
+
+<!-- SECTION 2: THE COUNCIL -->
+<div class="section">
+  <div class="reveal">
+    <span class="label">The Decision</span>
+    <h2 class="statement">382 AD. A council of men decided what God was allowed to say.</h2>
+  </div>
+  <div class="timeline reveal rd1">
+    <div class="tl-item">
+      <span class="tl-year">325 AD</span>
+      <p class="tl-event">Council of Nicaea</p>
+      <p class="tl-detail">The first cuts. One empire. One doctrine.</p>
+    </div>
+    <div class="tl-item">
+      <span class="tl-year">364 AD</span>
+      <p class="tl-event">Council of Laodicea</p>
+      <p class="tl-detail">Canon 35. Angel veneration condemned. Declared heresy.</p>
+    </div>
+    <div class="tl-item">
+      <span class="tl-year">382 AD</span>
+      <p class="tl-event">Council of Rome</p>
+      <p class="tl-detail">The canon is set. Of one hundred named angels — two survive. Michael. Gabriel. The rest are removed.</p>
+    </div>
+    <div class="tl-item">
+      <span class="tl-year">397 AD</span>
+      <p class="tl-event">Council of Carthage</p>
+      <p class="tl-detail">The canon is closed. Their names go unspoken in any church for over a thousand years.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: WHAT WAS REMOVED -->
+<div class="section">
+  <div class="reveal">
+    <span class="label">What Was Removed</span>
+    <h2 class="statement">Ninety-eight names. Struck from the record.</h2>
+  </div>
+  <div class="reveal rd1" style="margin:40px 0;line-height:2.4">
+    <p style="font-family:'Cinzel',serif;font-size:clamp(14px,2vw,17px);letter-spacing:3px;color:rgba(245,240,230,0.75);">
+      Uriel &nbsp;·&nbsp; Saraqael &nbsp;·&nbsp; Raguel &nbsp;·&nbsp; Remiel &nbsp;·&nbsp; Azazel &nbsp;·&nbsp; Penemue &nbsp;·&nbsp; Kokabiel &nbsp;·&nbsp; Shamsiel &nbsp;·&nbsp; Sariel &nbsp;·&nbsp; Baraqel &nbsp;·&nbsp; Tamiel &nbsp;·&nbsp; Hananel &nbsp;·&nbsp; and eighty-eight more.
+    </p>
+  </div>
+  <div class="redacted reveal rd2">
+    <span class="redacted-label">Officially Removed · 382 AD</span>
+    <p class="redacted-text">And there were one hundred, each known by name.</p>
+  </div>
+</div>
+
+<!-- SECTION 4: WHY -->
+<div class="section">
+  <div class="reveal">
+    <span class="label">Why</span>
+    <h2 class="statement">They wanted God to be feared.</h2>
+  </div>
+  <div class="quote reveal rd1">
+    <p>They made spirituality feel accessible —
+    not feared. Not idolised. Simply present.
+    That had to go.</p>
+  </div>
+</div>
+
+<!-- SECTION 5: WHAT SURVIVED -->
+<div class="section">
+  <div class="reveal">
+    <span class="label">What Survived</span>
+    <h2 class="statement">Everything.</h2>
+  </div>
+  <div class="quote reveal rd1">
+    <p>The Ethiopian Orthodox Church never adopted the Roman canon.
+    The Book of Enoch never left their scripture.</p>
+  </div>
+  <div class="quote reveal rd2">
+    <p>In 1947, a shepherd threw a stone into a cave above the Dead Sea
+    and heard something break. Two thousand years.
+    The names were intact.</p>
+  </div>
+</div>
+
+<!-- CLOSING -->
+<div class="closing">
+  <div class="reveal">
+    <h2 class="closing-title">Dead Poet remembers.</h2>
+    <p class="closing-body">
+      One hundred garments. One hundred Soul records.
+      Each named for an angel that was removed.
+      Permanent. Unchained. Unreachable by any council.
+    </p>
+    <a href="angels.html" class="btn-ghost">Meet the Angels</a>
+  </div>
+</div>
+
+</div><!-- end dark wrapper -->
+<footer>
+  <a href="index.html">Dead Poet</a>
+  <a href="angels.html">The Angels</a>
+  <a href="movement.html">The Movement</a>
+  <span style="opacity:.4">© 2026 Dead Poet. All Rights Reserved.</span>
+</footer>
+
+<script>
+const revEls = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+revEls.forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
