@@ -453,23 +453,27 @@ body.site-active{cursor:none}
 
 /* Angel entrance — two video layers: blurred fill behind, crisp contain on top */
 #angel-bg-blur{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(18px) brightness(1.02);z-index:1;pointer-events:none;opacity:0;animation:videoIn 2.6s ease-out forwards;animation-delay:.1s}
-#angel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;animation:videoIn 2.6s ease-out forwards;animation-delay:.1s;pointer-events:none;z-index:2}
+#angel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;animation:videoIn 2.6s ease-out forwards;animation-delay:.1s;pointer-events:none;z-index:2;max-width:100%;max-height:100%}
+#angel-video.missing{display:none !important}
 @keyframes videoIn{0%{opacity:0;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
 
 /* Soft vignette — dark only at very bottom for text legibility */
 .entrance-vignette{position:absolute;inset:0;background:linear-gradient(to top,rgba(44,40,36,.96) 0%,rgba(44,40,36,.15) 22%,transparent 40%);z-index:5;pointer-events:none}
 
-.entrance-content{position:relative;z-index:20;text-align:center;padding-bottom:88px;display:flex;flex-direction:column;align-items:center}
+.entrance-content{position:relative;z-index:20;text-align:center;padding-bottom:88px;display:flex;flex-direction:column;align-items:center;width:100%;left:0;transform:none}
 #particles{position:absolute;inset:0;pointer-events:none;z-index:3}
 .entrance-mark{font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:4px;margin-bottom:18px;opacity:0;animation:fadeUp 1s ease forwards;animation-delay:1.7s;position:relative}
 .entrance-rune{position:absolute;top:-44px;left:50%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:20px;color:var(--soul-blue);opacity:0;transition:opacity .6s;white-space:nowrap;text-shadow:0 0 12px rgba(126,184,247,.6);pointer-events:none}
 .entrance-brand{font-family:'Cinzel',serif;font-weight:900;font-size:clamp(42px,9vw,100px);letter-spacing:14px;color:var(--ash);text-transform:uppercase;opacity:0;animation:fadeUp 1.2s ease forwards;animation-delay:2s;line-height:1}
 .entrance-slogan{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(13px,2.2vw,20px);color:var(--gold2);letter-spacing:5px;margin-top:12px;opacity:0;animation:fadeUp 1s ease forwards;animation-delay:2.4s}
 .entrance-divider{width:1px;height:38px;background:linear-gradient(to bottom,transparent,var(--gold2),transparent);margin:28px 0;opacity:0;animation:fadeUp .8s ease forwards;animation-delay:2.8s}
-.entrance-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--ash);background:transparent;border:1px solid rgba(44,40,36,.4);padding:14px 46px;cursor:pointer;opacity:0;animation:fadeUp .8s ease forwards;animation-delay:3s;transition:background .35s,color .35s,border-color .35s,letter-spacing .35s;position:relative;overflow:hidden;z-index:10}
+.entrance-btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:6px;text-transform:uppercase;color:var(--ash);background:transparent;border:1px solid rgba(44,40,36,.6);padding:18px 64px;cursor:pointer;opacity:1;animation:fadeUp .8s ease 1.5s both, btnPulse 2.8s ease-in-out 3.8s infinite;transition:background .35s,color .35s,border-color .35s,letter-spacing .35s;position:relative;overflow:hidden;z-index:10}
+@keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(44,40,36,.2);border-color:rgba(44,40,36,.5)}50%{box-shadow:0 0 0 8px rgba(44,40,36,.08);border-color:rgba(44,40,36,.85)}}
+.entrance-btn::after{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .4s ease;z-index:-1}
 .entrance-btn::after{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .4s ease;z-index:-1}
 .entrance-btn:hover::after{transform:scaleX(1)}
-.entrance-btn:hover{color:#1a1612;border-color:var(--gold);letter-spacing:7px}
+.entrance-btn:hover{color:#1a1612;border-color:var(--gold);letter-spacing:8px;animation:none}
+.entrance-hint{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;color:rgba(44,40,36,.55);margin-top:16px;opacity:1}
 
 .particle{position:absolute;pointer-events:none;opacity:0;animation:particleDrift linear infinite}
 @keyframes particleDrift{0%{opacity:0;transform:translateY(0) rotate(0deg)}10%{opacity:.4}90%{opacity:.06}100%{opacity:0;transform:translateY(-85vh) rotate(200deg)}}
@@ -493,9 +497,9 @@ body.site-active{cursor:none}
 .close-secret:hover{color:var(--gold);border-color:var(--gold2)}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:28px 52px;display:flex;align-items:center;justify-content:space-between;transition:background .4s,border-color .4s,padding .4s;border-bottom:1px solid transparent}
-nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);backdrop-filter:blur(16px);padding:18px 52px}
-.nav-logo{font-family:'Cinzel',serif;font-weight:900;font-size:16px;letter-spacing:7px;color:var(--muted);text-transform:uppercase;text-decoration:none;cursor:none;position:relative;display:inline-flex;align-items:center;gap:0}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:22px 48px;display:flex;align-items:center;justify-content:space-between;gap:20px;transition:background .4s,border-color .4s,padding .4s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);backdrop-filter:blur(16px);padding:16px 48px}
+.nav-logo{font-family:'Cinzel',serif;font-weight:900;font-size:16px;letter-spacing:7px;color:var(--muted);text-transform:uppercase;text-decoration:none;cursor:none;position:relative;display:inline-flex;align-items:center;gap:0;flex-shrink:0}
 .nav-logo::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;background:var(--gold);transform:scaleX(0);transition:transform .3s;transform-origin:left}
 .nav-logo.activating::after{transform:scaleX(1)}
 .nl-word{display:inline-flex}
@@ -579,11 +583,18 @@ nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);bac
 .nl-l.scar-mended .nl-half {
   animation: sealFlash 2.4s ease-out forwards;
 }
-.nav-links{display:flex;gap:36px;list-style:none}
-.nav-links a{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links{display:flex;gap:32px;list-style:none;flex-shrink:0}
+.nav-links a{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;white-space:nowrap}
 .nav-links a:hover{color:var(--gold)}
-.nav-cta{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,184,122,.35);padding:9px 22px;text-decoration:none;transition:all .3s;cursor:none}
+.nav-cta{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,184,122,.35);padding:9px 22px;text-decoration:none;transition:all .3s;cursor:none;flex-shrink:0;white-space:nowrap}
 .nav-cta:hover{background:var(--gold);color:#1a1612}
+@media(max-width:700px){
+  nav{padding:16px 20px;gap:12px}
+  .nav-logo{font-size:12px;letter-spacing:4px}
+  .nav-links{gap:16px}
+  .nav-links a{font-size:7px;letter-spacing:2px}
+  .nav-cta{display:none}
+}
 
 /* ── HERO ── */
 #hero{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--ash)}
@@ -656,13 +667,37 @@ nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);bac
 
 /* ── PILLARS ── */
 #pillars{padding:0 52px 120px;border-bottom:1px solid var(--border)}
-.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;max-width:1060px;margin:0 auto}
+.pillars-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;max-width:1060px;margin:0 auto;border:1px solid rgba(200,184,122,.15)}
 @media(max-width:720px){.pillars-grid{grid-template-columns:1fr}}
-.pillar{padding:44px 32px;background:var(--ash3);border:1px solid var(--border);transition:border-color .3s,background .3s}
-.pillar:hover{border-color:rgba(200,184,122,.35);background:var(--ash2)}
-.pillar-glyph{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);margin-bottom:20px;opacity:.75}
-.pillar-title{font-family:'Cinzel',serif;font-size:15px;letter-spacing:3px;color:var(--white);margin-bottom:14px}
-.pillar-body{font-size:14px;font-style:italic;color:var(--white);line-height:1.8}
+.pillar{padding:56px 36px 52px;background:var(--ash);border-right:1px solid rgba(200,184,122,.12);
+  position:relative;overflow:hidden;transition:background .5s}
+.pillar:last-child{border-right:none}
+@media(max-width:720px){.pillar{border-right:none;border-bottom:1px solid rgba(200,184,122,.12)}}
+.pillar:hover{background:var(--ash2)}
+
+/* top gold rule */
+.pillar::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(to right,transparent,rgba(200,184,122,.5),transparent)}
+
+/* Sacred geometry background — faint, reverent */
+.pillar-geo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:.06;transition:opacity .5s}
+.pillar:hover .pillar-geo{opacity:.11}
+
+.pillar-num{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:4px;
+  text-transform:uppercase;color:rgba(200,184,122,.4);margin-bottom:32px;display:block}
+.pillar-glyph{font-size:18px;color:var(--gold);opacity:.7;margin-bottom:20px;display:block;
+  animation:glyphBreath 4s ease-in-out infinite}
+@keyframes glyphBreath{0%,100%{opacity:.5}50%{opacity:.9}}
+.pillar-title{font-family:'Cinzel',serif;font-size:16px;letter-spacing:4px;
+  color:var(--white);margin-bottom:18px;position:relative;z-index:1;font-weight:400}
+/* gold underline on title */
+.pillar-title::after{content:'';display:block;width:28px;height:1px;
+  background:rgba(200,184,122,.4);margin-top:12px}
+.pillar-body{font-size:14px;font-style:italic;color:rgba(220,210,190,.72);line-height:1.9;
+  position:relative;z-index:1}
+.pillar-sigil{width:100%;margin-bottom:28px;opacity:.18;transition:opacity .4s}
+.pillar:hover .pillar-sigil{opacity:.32}
 
 /* ── MYTHOLOGY ── */
 #mythology{padding:120px 52px;background:var(--ash2);border-top:1px solid var(--border)}
@@ -721,6 +756,12 @@ nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);bac
 .soul-mechanic-card:hover{border-color:rgba(126,184,247,.3)}
 .soul-mechanic-card--dark{border-color:rgba(120,20,20,.4);background:rgba(40,12,12,.5)}
 .soul-mechanic-card--dark:hover{border-color:rgba(180,30,30,.5)}
+.soul-mechanic-card--gold{border-color:rgba(200,184,122,.3);background:rgba(40,35,15,.5)}
+.soul-mechanic-card--gold:hover{border-color:rgba(200,184,122,.6)}
+.soul-mechanic-card--blue{border-color:rgba(74,158,255,.25);background:rgba(10,20,40,.5)}
+.soul-mechanic-card--blue:hover{border-color:rgba(74,158,255,.45)}
+.soul-mechanic-card--slate{border-color:rgba(100,120,140,.25);background:rgba(15,22,28,.5)}
+.soul-mechanic-card--slate:hover{border-color:rgba(100,120,140,.45)}
 .soul-mechanic-glyph{font-size:22px;color:var(--gold);margin-bottom:16px;display:block;line-height:1}
 .soul-mechanic-glyph--dim{color:rgba(126,184,247,.3)}
 .soul-mechanic-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:var(--white);margin-bottom:14px;text-transform:uppercase}
@@ -746,46 +787,17 @@ nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);bac
 .btn-soul:hover::before{transform:translateX(100%)}
 
 /* ── HANDWRITTEN RISE ── */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
-.rise-handwritten{text-align:center;margin-bottom:0;position:relative;user-select:none;padding:0 20px;line-height:1.1}
+.rise-handwritten{text-align:center;margin-bottom:0;position:relative;padding:0 20px;line-height:1.2}
 .rise-text{
-  font-family:'Caveat',cursive;
-  font-size:clamp(38px,9vw,88px);
-  font-weight:700;
-  letter-spacing:3px;
-  background:linear-gradient(160deg,#ffffff 0%,#c8c8c8 20%,#111111 45%,#dddddd 70%,#ffffff 100%);
-  background-size:200% 200%;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
-  position:relative;
+  font-family:'Cinzel',serif;
+  font-size:clamp(28px,5vw,52px);
+  font-weight:400;
+  letter-spacing:8px;
+  color:rgba(245,240,230,0.7);
   display:inline-block;
-  filter:drop-shadow(0 0 12px rgba(255,255,255,.2)) drop-shadow(0 0 30px rgba(255,255,255,.08));
-  animation:riseBreath 4s ease-in-out infinite, riseShimmer 8s ease-in-out infinite;
-}
-@keyframes riseBreath{
-  0%,100%{filter:drop-shadow(0 0 10px rgba(255,255,255,.15)) drop-shadow(0 0 24px rgba(255,255,255,.06))}
-  50%{filter:drop-shadow(0 0 20px rgba(255,255,255,.32)) drop-shadow(0 0 50px rgba(255,255,255,.12))}
-}
-@keyframes riseShimmer{
-  0%,100%{background-position:0% 0%}
-  50%{background-position:100% 100%}
 }
 .rise-dead{
-  font-family:'Caveat',cursive;
-  font-size:inherit;
-  font-weight:700;
-  -webkit-text-fill-color:transparent;
-  background:linear-gradient(160deg,#ff2200 0%,#cc0000 30%,#7a0000 55%,#ff3311 75%,#550000 100%);
-  background-size:200% 200%;
-  -webkit-background-clip:text;
-  background-clip:text;
-  animation:deadBleed 3s ease-in-out infinite, riseShimmer 6s ease-in-out infinite;
-  filter:drop-shadow(0 0 8px rgba(180,0,0,.7)) drop-shadow(0 3px 14px rgba(220,0,0,.45));
-}
-@keyframes deadBleed{
-  0%,100%{filter:drop-shadow(0 0 6px rgba(180,0,0,.55)) drop-shadow(0 2px 10px rgba(200,0,0,.3))}
-  50%{filter:drop-shadow(0 0 16px rgba(220,0,0,.9)) drop-shadow(0 4px 24px rgba(160,0,0,.55)) drop-shadow(0 0 44px rgba(120,0,0,.28))}
+  color:rgba(245,240,230,0.7);
 }
 /* poetic ampersand divider */
 .soul-ampersand{
@@ -801,16 +813,7 @@ nav.scrolled{background:rgba(44,40,36,.97);border-bottom-color:var(--border);bac
   letter-spacing:-2px;
   border-top:1px solid var(--border);
 }
-.rise-spark{
-  position:absolute;
-  border-radius:50%;
-  pointer-events:none;
-  animation:sparkFly var(--dur,1.2s) ease-out forwards;
-}
-@keyframes sparkFly{
-  0%{opacity:1;transform:translate(0,0) scale(1)}
-  100%{opacity:0;transform:translate(var(--tx,0px),var(--ty,-30px)) scale(0)}
-}
+
 #oracle{padding:120px 52px;background:var(--ash);border-top:1px solid var(--border);text-align:center;position:relative;overflow:hidden}
 #oracle::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 55% at 50% 50%,rgba(200,184,122,.04) 0%,transparent 70%);pointer-events:none}
 .oracle-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
@@ -1037,8 +1040,8 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
 
 
 
-<!-- DWARVEN BATTLE AXE (mythology section) -->
-<div class="weapon" id="axe" data-section="mythology">
+<!-- DWARVEN BATTLE AXE (movement section) -->
+<div class="weapon" id="axe" data-section="movement">
   <svg width="70" height="180" viewBox="0 0 70 180" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 6px rgba(200,184,122,.3))">
     <!-- straight hilt -->
     <line x1="42" y1="44" x2="42" y2="172" stroke="#c8b87a" stroke-width="1.3" opacity="0.75"/>
@@ -1081,18 +1084,18 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
 <!-- BOW (soul section) -->
 <div class="weapon" id="bow" data-section="soul">
   <svg width="60" height="180" viewBox="0 0 60 180" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 6px rgba(200,184,122,.3))">
-    <!-- bow curve — left side -->
-    <path d="M38 8 C26 30 22 70 22 90 C22 110 26 150 38 172" fill="none" stroke="#c8b87a" stroke-width="1.1" opacity="0.85"/>
-    <!-- bowstring — taut line -->
-    <line x1="38" y1="8" x2="38" y2="172" stroke="#c8b87a" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/>
-    <!-- nocked arrow — horizontal across bow, pointing LEFT (firing direction) -->
+    <!-- bow limb — flexible arc -->
+    <path d="M38 8 C26 30 22 70 22 90 C22 110 26 150 38 172" fill="none" stroke="#c8b87a" stroke-width="1.1" opacity="0.85" id="bow-limb"/>
+    <!-- bowstring — PATH so it can curve on draw -->
+    <path d="M38,8 L38,90 L38,172" fill="none" stroke="#c8b87a" stroke-width="0.6" opacity="0.6" id="bow-string"/>
+    <!-- nocked arrow shaft -->
     <line x1="4" y1="90" x2="38" y2="90" stroke="#c8b87a" stroke-width="0.9" opacity="0.8" id="bow-arrow-nocked"/>
     <!-- arrowhead pointing left -->
     <polygon points="2,90 12,86 12,94" fill="#c8b87a" opacity="0.85" id="bow-arrowhead-nocked"/>
-    <!-- fletching at right (nock end, on string) -->
+    <!-- fletching at nock end -->
     <line x1="38" y1="90" x2="44" y2="84" stroke="#c8b87a" stroke-width="0.7" opacity="0.55" id="bow-fletch1"/>
     <line x1="38" y1="90" x2="44" y2="96" stroke="#c8b87a" stroke-width="0.7" opacity="0.55" id="bow-fletch2"/>
-    <!-- grip -->
+    <!-- grip wrapping -->
     <line x1="18" y1="82" x2="26" y2="82" stroke="#c8b87a" stroke-width="1.5" opacity="0.6"/>
     <line x1="18" y1="87" x2="26" y2="87" stroke="#c8b87a" stroke-width="1.5" opacity="0.6"/>
     <line x1="18" y1="92" x2="26" y2="92" stroke="#c8b87a" stroke-width="1.5" opacity="0.6"/>
@@ -1253,7 +1256,7 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
   <video id="angel-bg-blur" autoplay muted playsinline loop>
     <source src="angel.mp4" type="video/mp4">
   </video>
-  <video id="angel-video" autoplay muted playsinline loop>
+  <video id="angel-video" autoplay muted playsinline loop onerror="this.style.display='none'" style="max-height:100%;max-width:100%">
     <source src="angel.mp4" type="video/mp4">
   </video>
   <div class="entrance-vignette"></div>
@@ -1267,6 +1270,7 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
     <div class="entrance-slogan">Clothing Beyond Reason</div>
     <div class="entrance-divider"></div>
     <button class="entrance-btn" id="entrance-btn">Enter</button>
+    <div class="entrance-hint">Tap to enter</div>
   </div>
 </div>
 
@@ -1276,9 +1280,7 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
 <nav id="nav">
   <a href="#" class="nav-logo" id="nav-logo"><span class="nl-word" id="nl-dead"><span class="nl-l">D</span><span class="nl-l">e</span><span class="nl-l">a</span><span class="nl-l">d</span></span><span class="nl-space"> </span><span class="nl-word" id="nl-poet"><span class="nl-l">P</span><span class="nl-l">o</span><span class="nl-l">e</span><span class="nl-l">t</span></span></a>
   <ul class="nav-links">
-    <li><a href="coming-soon.html" class="nav-link">The Angels</a></li>
-    <li><a href="coming-soon.html" class="nav-link">The Erasure</a></li>
-    <li><a href="coming-soon.html" class="nav-link">The Movement</a></li>
+    <li><a href="oracle.html" class="nav-link">Oracle</a></li>
     <li><a href="#soul" class="nav-link">Soul</a></li>
   </ul>
   <a href="coming-soon.html" class="nav-cta">Claim Your Angel</a>
@@ -1316,12 +1318,23 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
       <span class="rune-pop" id="hero-rune">ᛖ ᚨ ᛞ ᛈ ᛉ</span>
       <span class="rune-meaning">death · voice · dawn · fate · protection</span>✦
     </div>
-    <p class="hero-eyebrow">The 100 Angels — Founding Drop</p>
-    <h1 class="hero-title"><span class="cuttable" data-reveals="alive" data-word="dead"><span class="original-text">Dead</span><span class="reveal-word">alive</span></span><br><span class="cuttable" data-reveals="是" data-word="poet"><span class="original-text">Poet</span><span class="reveal-word">是</span></span><span class="hero-sacred"><span class="cuttable" data-reveals="self" data-word="clothing"><span class="original-text">Clothing</span><span class="reveal-word">self</span></span> <span class="cuttable" data-reveals="within" data-word="beyond"><span class="original-text">Beyond</span><span class="reveal-word">within</span></span> <span class="cuttable" data-reveals="love" data-word="reason"><span class="original-text">Reason</span><span class="reveal-word">love</span></span></span></h1>
-    <p class="hero-body">One hundred angels drawn from the oldest texts in human history. Many erased from scripture 1,700 years ago.</p>
-    <div class="hero-actions">
-      <a href="coming-soon.html" class="btn-primary">Meet the Angels</a>
-      <a href="coming-soon.html" class="btn-ghost">The Movement</a>
+    <p class="hero-eyebrow">Dead Poet</p>
+    <h1 class="hero-title"><span class="cuttable" data-reveals="alive" data-word="dead"><span class="original-text">Dead</span><span class="reveal-word">alive</span></span><br><span class="cuttable" data-reveals="is" data-word="poet"><span class="original-text">Poet</span><span class="reveal-word">is</span></span><span class="hero-sacred"><span class="cuttable" data-reveals="self" data-word="clothing"><span class="original-text">Clothing</span><span class="reveal-word">self</span></span> <span class="cuttable" data-reveals="within" data-word="beyond"><span class="original-text">Beyond</span><span class="reveal-word">within</span></span> <span class="cuttable" data-reveals="love" data-word="reason"><span class="original-text">Reason</span><span class="reveal-word">love</span></span></span></h1>
+
+    <!-- GARMENT IMAGE — swap src="garment.jpg" when photography is ready -->
+    <div style="margin:52px auto 0;max-width:320px;width:100%;position:relative">
+      <div style="aspect-ratio:3/4;background:#312d28;border:1px solid rgba(200,184,122,0.1);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        <!-- Logo watermark placeholder -->
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:8px;color:rgba(200,184,122,0.12);text-transform:uppercase;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap">Dead Poet</div>
+        <!-- Garment hint lines -->
+        <div style="width:1px;height:60%;background:linear-gradient(to bottom,transparent,rgba(200,184,122,0.06),transparent);position:absolute;left:50%;top:20%"></div>
+        <!-- Photo label -->
+        <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;color:rgba(200,184,122,0.25);white-space:nowrap">— Garment photography coming —</div>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="margin-top:40px">
+      <a href="oracle.html" class="btn-primary">Enter the Oracle</a>
     </div>
   </div>
   <div class="scroll-cue"><span>Scroll</span><div class="scroll-line"></div></div>
@@ -1333,8 +1346,7 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
     <p class="manifesto-eyebrow">✦ &nbsp; Dead Poet &nbsp; ✦</p>
     <p class="manifesto-line"><strong><span class="cuttable" data-reveals="self" data-word="clothing"><span class="original-text">Clothing</span><span class="reveal-word">self</span></span> <span class="cuttable" data-reveals="within" data-word="beyond"><span class="original-text">Beyond</span><span class="reveal-word">within</span></span> <span class="cuttable" data-reveals="love" data-word="reason"><span class="original-text">Reason</span><span class="reveal-word">love</span></span>.</strong></p>
     <div class="manifesto-sep"></div>
-    <p class="manifesto-line small">Pure linen. <strong>Measurably high vibrational frequency.</strong> Worn by priests, healers, and prophets across every civilisation for 36,000 years.</p>
-    <p class="manifesto-line small">One garment. Two worlds. <strong>Permanent.</strong></p>
+    <p class="manifesto-line small">Luxury you can actually feel. <strong>Physical and permanent.</strong> Clothing that exists in this world and beyond. Merging digital and physical.</p>
   </div>
 </div>
 
@@ -1342,17 +1354,10 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
 <section id="movement">
   <div class="movement-geo"><svg viewBox="0 0 700 700" fill="none"><circle cx="350" cy="350" r="280" stroke="#c8b87a" stroke-width="0.6"/><circle cx="350" cy="350" r="180" stroke="#c8b87a" stroke-width="0.5"/><polygon points="350,80 598,430 102,430" stroke="#c8b87a" stroke-width="0.6" fill="none"/><polygon points="350,620 598,270 102,270" stroke="#c8b87a" stroke-width="0.6" fill="none"/><circle cx="350" cy="350" r="60" stroke="#c8b87a" stroke-width="0.7"/></svg></div>
   <div class="movement-inner">
-    <div class="reveal"><h2 class="cbr-title">Clothing Beyond Reason</h2></div>
     <div class="movement-lines reveal rd1">
       <p class="movement-line">Genuinely healing.</p>
-      <p class="movement-line">Encoded permanently on the blockchain.</p>
-      <p class="movement-line">Wearable in digital worlds.</p>
-    </div>
-    <div class="soul-statement reveal rd2">
-      <div class="soul-statement-text" id="soul-statement-text">
-        <span class="soul-word-wrap" id="soul-words"></span>
-      </div>
-      <p class="two-worlds">A <strong>physical garment</strong> paired with an Angel — worn on the body, encoded on the blockchain. One creation. Two planes of existence.</p>
+      <p class="movement-line">Made to last.</p>
+      <p class="movement-line">Digital and physical.</p>
     </div>
   </div>
 </section>
@@ -1360,188 +1365,155 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
 <!-- PILLARS -->
 <section id="pillars">
   <div class="pillars-grid reveal">
-    <div class="pillar"><div class="pillar-glyph">✦</div><div class="pillar-title">Sacred Art</div><p class="pillar-body">The Sistine vault. Byzantine frescoes. Angelic script. Rune traditions. Two thousand years of human longing — worn on the body.</p></div>
-    <div class="pillar"><div class="pillar-glyph">✦</div><div class="pillar-title">The Fabric</div><p class="pillar-body">Pure linen. Measurably high vibrational frequency — among the highest recorded in any material. Worn by every civilisation's healers and prophets for 36,000 years.</p></div>
-    <div class="pillar"><div class="pillar-glyph">✦</div><div class="pillar-title">Two Worlds</div><p class="pillar-body">A physical garment. A Soul record on the blockchain. The same object. Both places. Permanent.</p></div>
+
+    <!-- PILLAR I — THE ART -->
+    <div class="pillar">
+      <div class="pillar-geo">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <!-- Star of David / Seal of Solomon — sacred art -->
+          <circle cx="100" cy="100" r="85" stroke="#c8b87a" stroke-width="0.6"/>
+          <circle cx="100" cy="100" r="55" stroke="#c8b87a" stroke-width="0.4"/>
+          <polygon points="100,20 172,140 28,140" fill="none" stroke="#c8b87a" stroke-width="0.6"/>
+          <polygon points="100,180 28,60 172,60" fill="none" stroke="#c8b87a" stroke-width="0.6"/>
+          <!-- Centre star -->
+          <circle cx="100" cy="100" r="8" stroke="#c8b87a" stroke-width="0.5"/>
+          <!-- six outer stars at points -->
+          <circle cx="100" cy="20" r="3" fill="#c8b87a" opacity="0.6"/>
+          <circle cx="172" cy="140" r="3" fill="#c8b87a" opacity="0.6"/>
+          <circle cx="28" cy="140" r="3" fill="#c8b87a" opacity="0.6"/>
+          <circle cx="100" cy="180" r="3" fill="#c8b87a" opacity="0.6"/>
+          <circle cx="28" cy="60" r="3" fill="#c8b87a" opacity="0.6"/>
+          <circle cx="172" cy="60" r="3" fill="#c8b87a" opacity="0.6"/>
+        </svg>
+      </div>
+      <span class="pillar-num">I</span>
+      <span class="pillar-glyph">✦</span>
+      <div class="pillar-title">The Art</div>
+      <p class="pillar-body">Drawn from two thousand years of sacred human expression. Worn on the body.</p>
+    </div>
+
+    <!-- PILLAR II — THE FABRIC -->
+    <div class="pillar">
+      <div class="pillar-geo">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <!-- Flower of Life pattern — linen, nature, creation -->
+          <circle cx="100" cy="100" r="85" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="100" cy="100" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="100" cy="70" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="100" cy="130" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="126" cy="85" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="74" cy="85" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="126" cy="115" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="74" cy="115" r="30" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="100" cy="100" r="4" fill="#c8b87a" opacity="0.7"/>
+        </svg>
+      </div>
+      <span class="pillar-num">II</span>
+      <span class="pillar-glyph">✦</span>
+      <div class="pillar-title">The Fabric</div>
+      <p class="pillar-body">100% pure linen. Woven to last a lifetime. Softer with every wear, stronger with every wash.</p>
+    </div>
+
+    <!-- PILLAR III — TWO WORLDS -->
+    <div class="pillar">
+      <div class="pillar-geo">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <!-- Vesica Piscis — two worlds intersecting, the divine proportion -->
+          <circle cx="100" cy="100" r="85" stroke="#c8b87a" stroke-width="0.5"/>
+          <circle cx="75" cy="100" r="50" stroke="#c8b87a" stroke-width="0.6"/>
+          <circle cx="125" cy="100" r="50" stroke="#c8b87a" stroke-width="0.6"/>
+          <!-- horizontal axis -->
+          <line x1="15" y1="100" x2="185" y2="100" stroke="#c8b87a" stroke-width="0.3"/>
+          <!-- vertical axis through intersection -->
+          <line x1="100" y1="58" x2="100" y2="142" stroke="#c8b87a" stroke-width="0.3"/>
+          <!-- star points at intersections -->
+          <circle cx="100" cy="58" r="3" fill="#c8b87a" opacity="0.7"/>
+          <circle cx="100" cy="142" r="3" fill="#c8b87a" opacity="0.7"/>
+          <circle cx="75" cy="100" r="3" fill="#c8b87a" opacity="0.5"/>
+          <circle cx="125" cy="100" r="3" fill="#c8b87a" opacity="0.5"/>
+        </svg>
+      </div>
+      <span class="pillar-num">III</span>
+      <span class="pillar-glyph">✦</span>
+      <div class="pillar-title">Two Worlds</div>
+      <p class="pillar-body">A physical garment. A permanent record. Clothing wearable in the physical and digital world.</p>
+    </div>
+
   </div>
 </section>
 
-<!-- MYTHOLOGY -->
-<section id="mythology">
-  <div class="myth-header reveal">
-    <p class="myth-eyebrow">✦ &nbsp; The Sacred Texts &nbsp; ✦</p>
-    <h2 class="myth-title">The Angels They Erased</h2>
-    <p class="myth-sub">Only Michael and Gabriel appear in the canonical Bible. The others were removed at the Council of Rome, 4th century AD. These are their names. Their domains. Their sources.</p>
-  </div>
-
-  <div class="myth-grid reveal rd1">
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier I — Archangel</div>
-      <div class="myth-name">Michael</div>
-      <div class="myth-meaning">"Who is like God"</div>
-      <p class="myth-body">Commander of heaven's armies. Protector of humanity. The most powerful angel named across all Abrahamic traditions — the one the others follow into battle. Present at the dawn of creation, appointed guardian of the entire human race.</p>
-      <div class="myth-source">Source: Book of Enoch, Daniel, Revelation</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier I — Archangel</div>
-      <div class="myth-name">Gabriel</div>
-      <div class="myth-meaning">"Strength of God"</div>
-      <p class="myth-body">Holy messenger. Bringer of revelation and prophecy. He appeared to Mary, to Daniel, to the prophets of every age. The voice between heaven and earth — the only angel whose name means the act of transmission itself.</p>
-      <div class="myth-source">Source: Daniel, Luke, Islamic Hadith</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier I — Archangel</div>
-      <div class="myth-name">Raphael</div>
-      <div class="myth-meaning">"God heals"</div>
-      <p class="myth-body">Angel of healing, restoration, and travellers. His name is the root of the Hebrew word for physician. He binds Azazel, guards Eden, and walks with humanity in disguise — the most human of all the archangels.</p>
-      <div class="myth-source">Source: Book of Tobit, Book of Enoch</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier I — Archangel</div>
-      <div class="myth-name">Uriel</div>
-      <div class="myth-meaning">"Light of God"</div>
-      <p class="myth-body">Angel of wisdom and illumination. He stands at the gate of Eden with a flaming sword. He governs thunder, the celestial luminaries, and divine truth. Removed from canonical scripture — his light was too inconvenient to name.</p>
-      <div class="myth-source">Source: Book of Enoch, 2 Esdras, Sibylline Oracles</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier II — Watcher</div>
-      <div class="myth-name">Azazel</div>
-      <div class="myth-meaning">"Strength of God"</div>
-      <p class="myth-body">The Watcher who taught humanity metalwork, warfare, and the art of the blade. He gave us beauty and destruction in the same breath. Cast into the wilderness, bound under stones until judgment — but never forgotten.</p>
-      <div class="myth-source">Source: Book of Enoch, Leviticus (unnamed)</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-    <div class="myth-card">
-      <div class="myth-tier">Tier II — Watcher</div>
-      <div class="myth-name">Penemue</div>
-      <div class="myth-meaning">"The Inside"</div>
-      <p class="myth-body">The Watcher who taught humanity the art of writing. Every word ever set to paper carries his name in its origin. He was punished for making humanity too powerful — for giving us the one tool that outlasts every empire.</p>
-      <div class="myth-source">Source: Book of Enoch, Chapter 69</div>
-      <div class="myth-glyph">✦</div>
-    </div>
-
-  </div>
-
-  <!-- angel card grid -->
-  <div style="margin-top:2px">
-    <div class="angels-grid reveal rd2">
-      <div class="angel-card main">
-        <div class="angel-art"><div class="angel-art-bg"></div><svg viewBox="0 0 300 400" fill="none"><circle cx="150" cy="150" r="120" stroke="#c8b87a" stroke-width=".8"/><circle cx="150" cy="150" r="80" stroke="#c8b87a" stroke-width=".6"/><circle cx="150" cy="150" r="40" stroke="#c8b87a" stroke-width=".8"/><line x1="150" y1="30" x2="150" y2="370" stroke="#c8b87a" stroke-width=".5"/><line x1="10" y1="150" x2="290" y2="150" stroke="#c8b87a" stroke-width=".5"/><polygon points="150,40 260,200 40,200" stroke="#c8b87a" stroke-width=".7" fill="none"/><polygon points="150,260 260,100 40,100" stroke="#c8b87a" stroke-width=".7" fill="none"/><circle cx="150" cy="60" r="6" stroke="#c8b87a" stroke-width=".8"/><circle cx="150" cy="240" r="6" stroke="#c8b87a" stroke-width=".8"/></svg></div>
-        <div class="angel-overlay"><div class="angel-tier-tag">Tier I — Archangel</div><div class="angel-name">Michael</div><div class="angel-domain">Commander of heaven's armies</div></div>
-      </div>
-      <div class="angel-card side">
-        <div class="angel-art"><div class="angel-art-bg"></div><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="80" stroke="#c8b87a" stroke-width=".8"/><circle cx="100" cy="100" r="50" stroke="#c8b87a" stroke-width=".6"/><polygon points="100,20 180,160 20,160" stroke="#c8b87a" stroke-width=".8" fill="none"/><polygon points="100,180 180,40 20,40" stroke="#c8b87a" stroke-width=".8" fill="none"/></svg></div>
-        <div class="angel-overlay"><div class="angel-tier-tag">Tier I — Archangel</div><div class="angel-name">Gabriel</div><div class="angel-domain">Messenger between worlds</div></div>
-      </div>
-      <div class="angel-card side">
-        <div class="angel-art"><div class="angel-art-bg"></div><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="85" stroke="#c8b87a" stroke-width=".6"/><circle cx="100" cy="100" r="55" stroke="#c8b87a" stroke-width=".6"/><circle cx="100" cy="100" r="25" stroke="#c8b87a" stroke-width=".8"/><line x1="100" y1="15" x2="100" y2="185" stroke="#c8b87a" stroke-width=".4"/><line x1="15" y1="100" x2="185" y2="100" stroke="#c8b87a" stroke-width=".4"/><line x1="30" y1="30" x2="170" y2="170" stroke="#c8b87a" stroke-width=".4"/><line x1="170" y1="30" x2="30" y2="170" stroke="#c8b87a" stroke-width=".4"/></svg></div>
-        <div class="angel-overlay"><div class="angel-tier-tag">Tier I — Archangel</div><div class="angel-name">Raphael</div><div class="angel-domain">God heals</div></div>
-      </div>
-      <div class="angel-card side">
-        <div class="angel-art"><div class="angel-art-bg"></div><svg viewBox="0 0 200 200" fill="none"><rect x="40" y="40" width="120" height="120" stroke="#c8b87a" stroke-width=".6" transform="rotate(45 100 100)"/><rect x="60" y="60" width="80" height="80" stroke="#c8b87a" stroke-width=".6" transform="rotate(45 100 100)"/><circle cx="100" cy="100" r="20" stroke="#c8b87a" stroke-width=".8"/></svg></div>
-        <div class="unrevealed-block"><span>Unrevealed</span></div>
-        <div class="angel-overlay"><div class="angel-tier-tag">Tier II — Watcher</div><div class="angel-name">Azazel</div><div class="angel-domain">The fallen who chose us</div></div>
-      </div>
-      <div class="angel-card side">
-        <div class="angel-art"><div class="angel-art-bg"></div><svg viewBox="0 0 200 200" fill="none"><polygon points="100,10 190,150 10,150" stroke="#c8b87a" stroke-width=".7" fill="none"/><polygon points="100,190 190,50 10,50" stroke="#c8b87a" stroke-width=".7" fill="none"/><circle cx="100" cy="100" r="30" stroke="#c8b87a" stroke-width=".8"/></svg></div>
-        <div class="unrevealed-block"><span>Unrevealed</span></div>
-        <div class="angel-overlay"><div class="angel-tier-tag">Tier III — Domain</div><div class="angel-name">Azrael</div><div class="angel-domain">Angel of Death</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SOUL TIERS -->
+<!-- SOUL -->
 <div class="soul-ampersand">&amp;</div>
 <section id="soul">
   <div class="reveal">
-    <div class="rise-handwritten" id="rise-handwritten">
-      <span class="rise-text" id="rise-text">Rise from the <span class="rise-dead">dead</span></span>
-    </div>
     <h2 class="soul-title">& Reclaim Your <em>Soul</em></h2>
-    <p class="soul-subtitle">One hundred Angels. One hundred <em>$SOUL</em> records. Permanent.</p>
+    <p class="soul-subtitle">One hundred garments. One hundred <em class="soul-token-inline">$SOUL</em> records. Permanent.</p>
   </div>
-
-  <!-- Soul mechanic explanation -->
   <div class="soul-mechanic-grid reveal rd1">
-    <div class="soul-mechanic-card">
+    <div class="soul-mechanic-card soul-mechanic-card--blue">
       <div class="soul-mechanic-glyph">✦</div>
-      <div class="soul-mechanic-title">Mint an Angel</div>
-      <p class="soul-mechanic-body">Every Angel comes bound to 1,000 <em class="soul-token-inline">$SOUL</em> tokens. The NFT and the token are the same object — one thing, two forms. This is DN404. One creation. Two worlds.</p>
+      <div class="soul-mechanic-title">Mint</div>
+      <p class="soul-mechanic-body">You receive a physical linen shirt, an Angel NFT, a clothing NFT, and 1,000 <em class="soul-token-inline">$SOUL</em> tokens — bound to your angel.</p>
     </div>
-    <div class="soul-mechanic-card">
+    <div class="soul-mechanic-card soul-mechanic-card--slate">
       <div class="soul-mechanic-glyph">◈</div>
       <div class="soul-mechanic-title">Hold Your Soul</div>
-      <p class="soul-mechanic-body">While you hold your <em class="soul-token-inline">$SOUL</em>, your Angel is visible. Yours. Present. The body and the soul together — as they should be.</p>
+      <p class="soul-mechanic-body">Yours. Verifiable. Transparent. When worn in digital worlds, it is undeniable. There will never be another.</p>
     </div>
     <div class="soul-mechanic-card soul-mechanic-card--dark">
       <div class="soul-mechanic-glyph">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-          <!-- broken circle — gaps at top and bottom right, blood-red -->
-          <path d="M13 2 A11 11 0 0 1 24 13" stroke="#8b1a1a" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M22 19 A11 11 0 0 1 6 23" stroke="#8b1a1a" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M3 18 A11 11 0 0 1 3 8" stroke="#8b1a1a" stroke-width="1.8" stroke-linecap="round"/>
-          <!-- drip -->
-          <path d="M13 24 Q13.5 26.5 13 28" stroke="#6b0f0f" stroke-width="1.2" stroke-linecap="round"/>
-          <circle cx="13" cy="28.5" r="1" fill="#6b0f0f"/>
-          <!-- crack marks -->
-          <line x1="13" y1="2" x2="11.5" y2="4.5" stroke="#a02020" stroke-width="0.8" stroke-linecap="round"/>
-          <line x1="24" y1="13" x2="21.5" y2="12" stroke="#a02020" stroke-width="0.8" stroke-linecap="round"/>
+        <!-- Cracked halo — beautiful, sorrowful -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <!-- main circle with gap at top — the broken halo -->
+          <path d="M16 3 A13 13 0 1 1 5 22" stroke="#8b1a1a" stroke-width="1.4" stroke-linecap="round"/>
+          <!-- crack lines radiating from break point -->
+          <line x1="16" y1="3" x2="13" y2="7" stroke="#8b1a1a" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+          <line x1="16" y1="3" x2="19" y2="7" stroke="#8b1a1a" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+          <line x1="5" y1="22" x2="3" y2="25" stroke="#8b1a1a" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+          <!-- single falling shard -->
+          <line x1="16" y1="3" x2="15" y2="10" stroke="#8b1a1a" stroke-width="0.5" stroke-linecap="round" opacity="0.4"/>
+          <!-- small dot at break — the lost point -->
+          <circle cx="16" cy="3" r="1.2" fill="#8b1a1a" opacity="0.6"/>
         </svg>
       </div>
-      <div class="soul-mechanic-title">Sell Your Soul</div>
-      <p class="soul-mechanic-body">It's your choice. Will you sell your <em class="soul-token-inline">$SOUL</em> and lose sight of yourself?</p>
+      <div class="soul-mechanic-title">Sell Your <em class="soul-token-inline">$SOUL</em></div>
+      <p class="soul-mechanic-body">Sell your <em class="soul-token-inline">$SOUL</em> tokens and lose your angel. The garment remains. The record does not.</p>
     </div>
-    <div class="soul-mechanic-card">
+
+    <div class="soul-mechanic-card soul-mechanic-card--gold">
       <div class="soul-mechanic-glyph">
-        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-          <path d="M22 13 A9 9 0 1 1 17 4.8" stroke="#c8b87a" stroke-width="1.6" stroke-linecap="round"/>
-          <polygon points="17,1 21,6 14,7" fill="#c8b87a"/>
+        <!-- Cycle arrow — gold, hopeful, returning -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M26 16 A10 10 0 1 1 20 6.5" stroke="#c8b87a" stroke-width="1.4" stroke-linecap="round"/>
+          <!-- arrowhead at start of arc -->
+          <polygon points="20,3 25,8 16,8" fill="#c8b87a"/>
+          <!-- small pulse dot at centre — the soul returning -->
+          <circle cx="16" cy="16" r="2.5" fill="#c8b87a" opacity="0.4">
+            <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="16" cy="16" r="1.2" fill="#c8b87a" opacity="0.8"/>
         </svg>
       </div>
       <div class="soul-mechanic-title">Reincarnate</div>
-      <p class="soul-mechanic-body">Buy back 1,000 <em class="soul-token-inline">$SOUL</em> and you reincarnate — a new Angel drawn from the pool. Different body. Same soul. The rare ones never return to the pool.</p>
+      <p class="soul-mechanic-body">Buy back 1,000 <em class="soul-token-inline">$SOUL</em> and reincarnate — a new angel drawn from the pool. Different angel. Same soul.</p>
     </div>
   </div>
-
-  <div class="tiers reveal rd2">
-    <div class="tier-card"><div class="tier-number">I</div><div class="tier-label">Tier One</div><div class="tier-name">Archangels</div><div class="tier-count">7</div><p class="tier-desc">Named in the Book of Enoch. Seven garments. Seven Soul records. Lock the NFT side and both sides lock — body and soul, sealed together. They will never return to the pool.</p><div class="tier-mechanic">Permanent · Seven only</div></div>
-    <div class="tier-card center"><div class="tier-number">II</div><div class="tier-label">Tier Two</div><div class="tier-name">The Watchers</div><div class="tier-count">20</div><p class="tier-desc">Angels who chose humanity over heaven. Removed from the biblical canon. Twenty garments. Each Soul record unrevealed until it finds its keeper. Trade as NFT or token — your choice.</p><div class="tier-mechanic">Rare · Unrevealed</div></div>
-    <div class="tier-card"><div class="tier-number">III</div><div class="tier-label">Tier Three</div><div class="tier-name">Domain Angels</div><div class="tier-count">73</div><p class="tier-desc">Angels of death, sleep, love, storms, memory, healing. The body of the collection. Hold your Soul and they stay visible. Let go — and they fade.</p><div class="tier-mechanic">The collection</div></div>
+  <div class="rise-handwritten reveal rd3" id="rise-handwritten">
+    <span class="rise-text" id="rise-text">Rise from the <span class="rise-dead">dead</span></span>
   </div>
-
   <div class="reveal rd3"><a href="coming-soon.html" class="btn-soul">Reclaim Your Soul</a></div>
 </section>
 
 <!-- ORACLE -->
 <section id="oracle">
-  <div class="reveal"><p class="oracle-label">Coming Soon</p><h2 class="oracle-title">The Dead Poets<br>Oracle</h2><p class="oracle-body">Speak directly with the great poets, prophets, and philosophers of human history. Built from their complete works, their historical context, their specific voice.</p></div>
+  <div class="reveal"><p class="oracle-label">The Oracle</p><h2 class="oracle-title">Speak with the<br>Dead Poets</h2><p class="oracle-body">The great poets and philosophers of human history. Built from their complete works. Their specific voice.</p></div>
   <div class="poets-row reveal rd1">
     <div class="poet-card"><div class="poet-name">Rumi</div><div class="poet-era">1207–1273 · Persia</div><div class="poet-access">Public Access</div></div>
-    <div class="poet-card"><div class="poet-name">Jesus of Nazareth</div><div class="poet-era">~4 BC–30 AD · Judea</div><div class="poet-access">Soul Holders</div></div>
-    <div class="poet-card"><div class="poet-name">Marcus Aurelius</div><div class="poet-era">121–180 AD · Rome</div><div class="poet-access">Soul Holders</div></div>
-    <div class="poet-card"><div class="poet-name">William Blake</div><div class="poet-era">1757–1827 · London</div><div class="poet-access">Soul Holders</div></div>
-    <div class="poet-card locked"><div class="poet-name">Hafez</div><div class="poet-era">1315–1390 · Shiraz</div><div class="poet-access">Archangel Only</div></div>
+    <div class="poet-card"><div class="poet-name">Marcus Aurelius</div><div class="poet-era">121–180 AD · Rome</div><div class="poet-access">Coming Soon</div></div>
+    <div class="poet-card"><div class="poet-name">William Blake</div><div class="poet-era">1757–1827 · London</div><div class="poet-access">Coming Soon</div></div>
+    <div class="poet-card locked"><div class="poet-name">Hafez</div><div class="poet-era">1315–1390 · Shiraz</div><div class="poet-access">Coming Soon</div></div>
   </div>
-  <div class="reveal rd2"><a href="#" class="btn-ghost">Learn About the Oracle</a></div>
-</section>
-
-<!-- LINEN -->
-<section id="linen">
-  <div class="linen-grid">
-    <div class="linen-visual reveal"><svg viewBox="0 0 300 400" fill="none"><circle cx="150" cy="200" r="140" stroke="#c8b87a" stroke-width=".7"/><circle cx="150" cy="200" r="100" stroke="#c8b87a" stroke-width=".6"/><circle cx="150" cy="200" r="60" stroke="#c8b87a" stroke-width=".6"/><circle cx="150" cy="200" r="20" stroke="#c8b87a" stroke-width=".8"/><line x1="150" y1="60" x2="150" y2="340" stroke="#c8b87a" stroke-width=".4"/><line x1="10" y1="200" x2="290" y2="200" stroke="#c8b87a" stroke-width=".4"/><circle cx="150" cy="100" r="60" stroke="#c8b87a" stroke-width=".5"/><circle cx="150" cy="300" r="60" stroke="#c8b87a" stroke-width=".5"/><circle cx="202" cy="130" r="60" stroke="#c8b87a" stroke-width=".5"/><circle cx="98" cy="130" r="60" stroke="#c8b87a" stroke-width=".5"/><circle cx="202" cy="270" r="60" stroke="#c8b87a" stroke-width=".5"/><circle cx="98" cy="270" r="60" stroke="#c8b87a" stroke-width=".5"/></svg><div class="linen-vis-glow"></div></div>
-    <div class="reveal rd1"><p class="section-label">The Fabric</p><h2 class="linen-title">Clothing That<br>Loves You Back</h2><p class="linen-body">Pure linen carries a <strong>measurably high vibrational frequency</strong> — among the highest recorded in any material on earth. Worn by priests, healers, and prophets across every civilisation for 36,000 years.</p><p class="linen-body">It breathes. It softens with time. It holds its shape long after everything else has gone.</p></div>
-  </div>
+  <div class="reveal rd2"><a href="oracle.html" class="btn-ghost">Enter the Oracle — Rumi</a></div>
 </section>
 
 <!-- FOOTER -->
@@ -1549,9 +1521,7 @@ footer.whisper::after{color:rgba(200,184,122,.35)}
   <div class="footer-top">
     <div><div class="footer-brand-name">Dead Poet</div><div class="footer-tagline">Clothing Beyond Reason</div></div>
     <div class="footer-links">
-      <div class="footer-col"><h4>Collection</h4><a href="#">The 100 Angels</a><a href="#">Archangels</a><a href="#">The Watchers</a><a href="#">Domain Angels</a></div>
-      <div class="footer-col"><h4>Soul</h4><a href="#">Soul Accord</a><a href="#">The 100 Angels</a><a href="#">Both Worlds</a><a href="#">Permanence</a></div>
-      <div class="footer-col"><h4>World</h4><a href="#">Manifesto</a><a href="#">The Oracle</a><a href="#">Linen Vision</a><a href="#">Community</a></div>
+      <div class="footer-col"><h4>World</h4><a href="oracle.html">The Oracle</a></div>
     </div>
   </div>
   <div class="footer-bottom">
@@ -1668,9 +1638,23 @@ function animCursor(){
 animCursor();
 
 
+// ── VIDEO FALLBACK ───────────────────────────────────────
+const vid = document.getElementById('angel-video');
+if(vid){
+  vid.addEventListener('error', ()=>{ vid.classList.add('missing'); });
+  vid.addEventListener('stalled', ()=>{ setTimeout(()=>{ if(vid.readyState===0) vid.classList.add('missing'); }, 2000); });
+}
+
 // ── ENTRANCE ────────────────────────────────────────────
 const enterBtn = document.getElementById('entrance-btn');
-enterBtn.addEventListener('click', enterSite);
+enterBtn.addEventListener('click', ()=>{ try{ enterSite(); }catch(e){ 
+  // fallback — just hide entrance
+  const entrance = document.getElementById('entrance');
+  const site = document.getElementById('site');
+  if(entrance){ entrance.style.display='none'; }
+  if(site){ site.style.opacity='1'; site.style.transform='translateY(0)'; }
+  document.body.classList.add('site-active');
+}});
 
 function enterSite(){
   const entrance = document.getElementById('entrance');
@@ -1739,7 +1723,7 @@ WEAPON_IDS.forEach(id => {
     angle: 0, angleTarget: 0,
     carried: false,
     driftT: Math.random() * Math.PI * 2,
-    swingActive: false, swingT: 0, swingType: 'slash'
+    swingActive: false, swingT: 0, swingType: 'slash', swingDir: 0
   };
 
   el.style.left = (window.innerWidth - 80 - sw/2) + 'px';
@@ -1750,7 +1734,7 @@ WEAPON_IDS.forEach(id => {
     const w = weapons[id];
     if(w.carried){
       if(id === 'bow'){
-        shootArrow(w.x + w.sw/2, w.y + w.sh/2, mx, my);
+        bowDrawBack(w.x + w.sw/2, w.y + w.sh/2, mx, my);
         e.stopPropagation();
         return;
       }
@@ -1854,6 +1838,15 @@ if(isTouchDevice){
   });
 
   document.addEventListener('touchstart', e => {
+    // ── QUILL MODE — touch drawing ──────────────────────────
+    if(quillMode){
+      if(performance.now() < quillReadyAt) return; // too soon after activation
+      const t = e.touches[0];
+      isWriting = true;
+      lastWriteX = t.clientX; lastWriteY = t.clientY;
+      strokePoints = [{x:t.clientX, y:t.clientY}];
+      return;
+    }
     const sw = weapons['sword'];
     if(!sw || !sw.carried) return;
     const t = e.touches[0];
@@ -1872,8 +1865,16 @@ if(isTouchDevice){
     if(mobileHint) mobileHint.classList.add('hidden');
   }, { passive: true });
 
-  // Passive listener for tracking — never blocks scroll
   document.addEventListener('touchmove', e => {
+    if(quillMode){
+      const t = e.touches[0];
+      if(isWriting){
+        lastWriteX = t.clientX; lastWriteY = t.clientY;
+        strokePoints.push({x:t.clientX, y:t.clientY});
+        drawInk(t.clientX, t.clientY);
+      }
+      return;
+    }
     const sw = weapons['sword'];
     if(!sw || !sw.carried) return;
     if(touchIsHold) return; // hold mode = let page scroll freely
@@ -1891,12 +1892,18 @@ if(isTouchDevice){
     drawDragGuide();
   }, { passive: true });
 
-  // Non-passive solely to block scroll during active sword swing
+  // Non-passive solely to block scroll during active sword swing or quill drawing
   document.addEventListener('touchmove', e => {
+    if(quillMode && isWriting){ e.preventDefault(); return; }
     if(!touchIsHold && isDragging) e.preventDefault();
   }, { passive: false });
 
   document.addEventListener('touchend', e => {
+    if(quillMode){
+      isWriting = false;
+      checkHeartGesture();
+      return;
+    }
     if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
     touchIsHold = false;
     const sw = weapons['sword'];
@@ -2520,14 +2527,14 @@ function _writeSkinToSVG(skin, t, from, to){
 function checkBladeUnlocks(quality){
   if(quality === 'perfect'){
     perfectCuts++;
-    if(perfectCuts >= 10 && currentSkin !== 'gold') unlockBlade('gold');
+    if(perfectCuts >= 3 && currentSkin !== 'gold') unlockBlade('gold');
   }
 }
 
 function checkDeadPoetCut(word){
   if(word !== 'dead' && word !== 'poet') return;
   deadPoetCuts++;
-  if(deadPoetCuts >= 100 && currentSkin !== 'dark') unlockBlade('dark');
+  if(deadPoetCuts >= 10 && currentSkin !== 'dark') unlockBlade('dark');
 }
 
 function checkPeaceUnlock(){
@@ -2932,6 +2939,7 @@ function executeSwing(path){
   else if(quality==='perfect')     swingType='thrust';    // perfect straight → thrust
 
   w.swingActive=true; w.swingT=0; w.swingType=swingType;
+  w.swingDir = dragAngle; // store actual drag direction for the animation
   w.angleTarget=dragAngle-90;
   w.el.classList.add('swinging');
 
@@ -3101,6 +3109,106 @@ function dropAll(){
 const arrowContainer = document.getElementById('arrow-container');
 const activeArrows   = [];
 
+// ── BOW DRAW STATE ───────────────────────────────────────
+let bowDrawing = false;
+let bowDrawTimeout = null;
+
+function bowDrawBack(fromX, fromY, toX, toY){
+  if(bowDrawing) return;
+  bowDrawing = true;
+
+  const arrow     = document.getElementById('bow-arrow-nocked');
+  const arrowHead = document.getElementById('bow-arrowhead-nocked');
+  const fletch1   = document.getElementById('bow-fletch1');
+  const fletch2   = document.getElementById('bow-fletch2');
+  const bowString = document.getElementById('bow-string');
+  const bowLimb   = document.getElementById('bow-limb');
+
+  const MAX_PULL  = 20;   // max px drawback
+  const DRAW_DUR  = 380;  // ms to reach full draw — slow, deliberate
+  const HOLD_DUR  = 60;   // ms at full draw before release
+  const SNAP_DUR  = 90;   // ms to snap back
+
+  const startTime = performance.now();
+
+  // Easing — slow start, ease into tension (like real bow resistance)
+  function easeInOut(t){ return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function easeIn(t){ return t * t * t; }
+
+  function setDraw(pull){
+    // Arrow shaft and head pull back
+    if(arrow){
+      arrow.setAttribute('x1', 4 - pull);
+      arrow.setAttribute('x2', 38 - pull);
+    }
+    if(arrowHead){
+      arrowHead.setAttribute('points', `${2-pull},90 ${12-pull},86 ${12-pull},94`);
+    }
+    // Fletching moves with nock
+    if(fletch1){ fletch1.setAttribute('x1', 38-pull); fletch1.setAttribute('x2', 44-pull); }
+    if(fletch2){ fletch2.setAttribute('x1', 38-pull); fletch2.setAttribute('x2', 44-pull); }
+    // String curves — quadratic bezier from tip to draw point to tip
+    // At rest: straight line. At full draw: bows out left by pull amount
+    const drawX = 38 - pull;
+    if(bowString){
+      bowString.setAttribute('d', `M38,8 Q${drawX},90 38,172`);
+    }
+    // Limb flexes slightly — tips draw toward centre under tension
+    if(bowLimb){
+      const flex = pull * 0.3;
+      bowLimb.setAttribute('d',
+        `M38 ${8+flex} C${26-flex*0.3} 30 22 70 22 90 C22 110 ${26-flex*0.3} 150 38 ${172-flex}`
+      );
+    }
+  }
+
+  function animDraw(now){
+    const t = Math.min(1, (now - startTime) / DRAW_DUR);
+    const pull = easeIn(t) * MAX_PULL;
+    setDraw(pull);
+    if(t < 1){
+      requestAnimationFrame(animDraw);
+    } else {
+      // Full draw — hold briefly with a tiny vibration
+      let vibCount = 0;
+      function vibrate(){
+        vibCount++;
+        const vib = Math.sin(vibCount * 1.8) * 1.2 * (1 - vibCount / 8);
+        setDraw(MAX_PULL + vib);
+        if(vibCount < 8) setTimeout(vibrate, 12);
+        else {
+          // Release
+          bowDrawTimeout = setTimeout(()=>{
+            shootArrow(fromX, fromY, toX, toY);
+            // Snap back — fast spring
+            const snapStart = performance.now();
+            function animSnap(now2){
+              const p2 = Math.min(1, (now2 - snapStart) / SNAP_DUR);
+              // Overshoot spring — goes slightly past rest then settles
+              const spring = p2 < 0.7
+                ? MAX_PULL * (1 - p2/0.7)
+                : -MAX_PULL * 0.08 * Math.sin((p2 - 0.7) / 0.3 * Math.PI);
+              setDraw(Math.max(0, spring));
+              if(p2 < 1) requestAnimationFrame(animSnap);
+              else {
+                setDraw(0);
+                // Restore limb
+                if(bowLimb) bowLimb.setAttribute('d',
+                  'M38 8 C26 30 22 70 22 90 C22 110 26 150 38 172'
+                );
+                bowDrawing = false;
+              }
+            }
+            requestAnimationFrame(animSnap);
+          }, HOLD_DUR);
+        }
+      }
+      vibrate();
+    }
+  }
+  requestAnimationFrame(animDraw);
+}
+
 function shootArrow(fromX, fromY, toX, toY){
   const angle  = Math.atan2(toY - fromY, toX - fromX) * (180/Math.PI) + 90;
   const el     = document.createElement('div');
@@ -3165,7 +3273,7 @@ const mHist = [];
 
     // ── POSITION ──
     const posLerp = w.carried
-      ? (wid === 'sword' ? 0.38 : 0.28)
+      ? (wid === 'sword' ? 0.72 : 0.42)
       : 0.06;
     w.x += (w.tx - w.x) * posLerp;
     w.y += (w.ty - w.y) * posLerp;
@@ -3173,90 +3281,97 @@ const mHist = [];
     // ── ANGLE ──
     if(w.carried){
       if(wid === 'sword'){
-        // Immediate delta: last two points only — zero lag
-        if(mHist.length >= 2){
-          const a = mHist[mHist.length - 2], b = mHist[mHist.length - 1];
-          const dx = b.x - a.x, dy = b.y - a.y;
-          if(Math.hypot(dx, dy) > 1.5){
-            const raw = Math.atan2(dy, dx) * (180/Math.PI) - 90;
-            w.angleTarget = Math.max(-72, Math.min(72, raw));
+        if(w.swingActive){
+          // ── SWING — direction-aware arc, one clean model ──
+          w.swingT += dt * 4.5; // slower = smoother
+
+          // dragAngle → blade rotation offset
+          // Drag right (0°) = blade leans right (+angle)
+          // Drag left (180°/-180°) = blade leans left (-angle)
+          // Drag up (-90°) = thrust upward lean
+          // Drag down (90°) = downward sweep
+          const dir = w.swingDir || 0;
+          const dirRad = dir * Math.PI / 180;
+
+          // Peak tilt in direction of swing — 55° max
+          const peak = Math.cos(dirRad) * 55; // horizontal component drives tilt
+
+          // Single smooth arc: rise → peak → decay back to zero
+          // Uses a shaped envelope: quick attack, slow decay
+          const t = w.swingT;
+          const envelope = t < 0.3
+            ? (t / 0.3)                          // attack: 0→1 over 0.3s
+            : Math.exp(-(t - 0.3) * 2.8);        // decay: exponential fall
+
+          const targetAngle = peak * envelope;
+          w.angle += (targetAngle - w.angle) * 0.28;
+
+          // End swing when envelope is essentially zero
+          if(t > 2.2 || (t > 0.8 && Math.abs(targetAngle) < 0.5)){
+            w.swingActive = false;
+            w.swingT = 0;
+            w.swingDir = 0;
+            w.el.classList.remove('swinging');
+            w.angleTarget = 0;
           }
+
+          // Feed trail
+          const radA = w.angle * Math.PI / 180;
+          const bladeLen = 175;
+          trailPoints.push({
+            x: w.x + 19 + Math.sin(radA) * bladeLen,
+            y: w.y + 4  - Math.cos(radA) * bladeLen * 0.25,
+            t: performance.now(),
+            st: 'slash'
+          });
+
+        } else {
+          // ── CARRY — blade follows movement direction gently ──
+          if(mHist.length >= 3){
+            const oldest = mHist[0];
+            const newest = mHist[mHist.length - 1];
+            const dx = newest.x - oldest.x;
+            const dy = newest.y - oldest.y;
+            const speed = Math.hypot(dx, dy);
+            if(speed > 5){
+              const raw = Math.atan2(dy, dx) * (180/Math.PI) - 90;
+              w.angleTarget = Math.max(-38, Math.min(38, raw * 0.5));
+            } else {
+              w.angleTarget *= 0.92; // drift back to zero when still
+            }
+          }
+          w.angle += (w.angleTarget - w.angle) * 0.10;
         }
-        w.angle += (w.angleTarget - w.angle) * 0.25;
       } else {
         const raw = Math.atan2(mvY, mvX) * (180/Math.PI) - 90;
         w.angleTarget = Math.max(-65, Math.min(65, raw));
         w.angle += (w.angleTarget - w.angle) * 0.12;
       }
     } else {
+      // Not carried — return to upright gracefully
       w.angleTarget = 0;
-      w.angle += (w.angleTarget - w.angle) * 0.08;
+      w.angle += (0 - w.angle) * 0.04;
     }
 
-    // Swing animation — rapier: fast fluid arcs, no heavy katana wind-ups
+    // Flourish overrides everything
     if(flourishActive && wid === 'sword'){
-      // ── FLOURISH — full 360° windmill spin, Jack Sparrow style ──
-      flourishT += dt * 4.5; // ~1.4 revolutions/sec
-      w.angle = flourishT * (180/Math.PI); // full rotation
+      flourishT += dt * 4.5;
+      w.angle = flourishT * (180/Math.PI);
       if(flourishT > Math.PI * 2){
         flourishActive = false;
         flourishT = 0;
         w.angle = 0;
         w.el.classList.remove('flourishing');
       }
-    } else if(w.swingActive){
-      w.swingT += dt * (wid==='sword' ? 7 : 8); // rapier resolves faster
+    }
 
-      let swing = 0;
-      if(wid === 'sword'){
-        const type = w.swingType || 'slash';
-        if(type === 'thrust'){
-          // Thrust: lightning-fast lunge, minimal arc — tip leads straight
-          if(w.swingT < 0.25){
-            swing = (w.swingT/0.25) * 18;          // tiny forward rotate
-          } else {
-            swing = 18 * Math.exp(-(w.swingT-0.25)*4) * Math.cos((w.swingT-0.25)*3);
-          }
-        } else if(type === 'disengage'){
-          // Disengage: downward cut with flowing recovery
-          if(w.swingT < 0.3){
-            swing = -(w.swingT/0.3)*30;            // small pull-back
-          } else {
-            swing = -30 + ((w.swingT-0.3)/0.25)*95;
-            swing = Math.max(-30, Math.min(65, swing));
-            if(w.swingT > 0.55){
-              swing = 65 * Math.exp(-(w.swingT-0.55)*2.5) * Math.cos((w.swingT-0.55)*3.8);
-            }
-          }
-        } else {
-          // Slash: clean horizontal cut with a single rebound — the default
-          swing = Math.sin(w.swingT * 2.0) * 55 * Math.exp(-w.swingT * 1.4);
-        }
-
-        // Feed rapier tip arc into trail — blade is longer, tip offset from pommel
-        if(w.swingActive && w.swingT < 2.0){
-          const radA = swing * Math.PI / 180;
-          const bladeLen = 175; // rapier blade longer than katana
-          trailPoints.push({
-            x: w.x + 19 + Math.sin(radA) * bladeLen,
-            y: w.y + 4  - Math.cos(radA) * bladeLen * 0.25,
-            t: performance.now(),
-            st: w.swingType === 'thrust' ? 'thrust' : 'slash'
-          });
-        }
-      } else {
-        // Axe — simple heavy swing
-        swing = Math.sin(w.swingT) * 55 * Math.exp(-w.swingT * 0.5);
-      }
-
-      // Smooth angle — rapier responds crisply
-      w.angle += (swing - w.angle) * (wid==='sword' ? 0.52 : 0.38);
-      const timeout = wid==='sword'
-        ? (w.swingType==='thrust' ? 1.8 : w.swingType==='disengage' ? 2.8 : 2.0)
-        : 2.5;
-      if(w.swingT > timeout){ w.swingActive = false; w.swingT = 0; w.swingType = 'slash'; }
+    // Axe swing
+    if(wid === 'axe' && w.swingActive){
+      w.swingT += dt * 8;
+      const axeSwing = Math.sin(w.swingT) * 55 * Math.exp(-w.swingT * 0.5);
+      w.angle += (axeSwing - w.angle) * 0.50;
+      if(w.swingT > 2.5){ w.swingActive = false; w.swingT = 0; }
     } else if(wid !== 'sword'){
-      // Axe/bow idle angle — sword angle already handled in the carried/idle block above
       w.angle += (w.angleTarget - w.angle) * 0.1;
     }
 
@@ -3295,7 +3410,7 @@ const mHist = [];
 
 // Scroll — keep weapons near their sections
 window.addEventListener('scroll', () => {
-  const secs = { sword:'hero', axe:'mythology', bow:'soul' };
+  const secs = { sword:'hero', axe:'movement', bow:'soul' };
   Object.entries(secs).forEach(([wid, sid]) => {
     const w = weapons[wid];
     if(!w || w.carried) return;
@@ -3305,7 +3420,7 @@ window.addEventListener('scroll', () => {
 
 // Initial section positions
 positionWeaponToSection('sword','hero');
-positionWeaponToSection('axe','mythology');
+positionWeaponToSection('axe','movement');
 positionWeaponToSection('bow','soul');
 
 
@@ -3330,61 +3445,7 @@ soulWords.forEach(w => soulObs.observe(w));
 
 
 // ── RISE FROM THE DEAD — SPARKLING TEXT ─────────────────
-(function(){
-  const riseEl = document.getElementById('rise-text');
-  if(!riseEl) return;
 
-  function spawnSpark(){
-    const rect = riseEl.getBoundingClientRect();
-    const containerRect = riseEl.closest('.rise-handwritten').getBoundingClientRect();
-    if(rect.width === 0) return;
-
-    const spark = document.createElement('div');
-    spark.className = 'rise-spark';
-
-    // random position across the text
-    const x = Math.random() * rect.width;
-    const y = Math.random() * rect.height;
-
-    // spark colour — white-silver with occasional very faint red
-    const colours = [
-      'rgba(255,255,255,0.9)',
-      'rgba(220,220,220,0.8)',
-      'rgba(200,200,200,0.7)',
-      'rgba(255,255,255,1)',
-      'rgba(180,180,180,0.6)',
-      'rgba(255,80,60,0.6)',   // rare blood flicker
-    ];
-    const col = colours[Math.random() < 0.08 ? 5 : Math.floor(Math.random() * 5)];
-
-    const size = 1 + Math.random() * 2.5;
-    const tx = (Math.random() - 0.5) * 28;
-    const ty = -(8 + Math.random() * 22);
-    const dur = 0.8 + Math.random() * 0.8;
-
-    spark.style.cssText = `
-      left:${rect.left - containerRect.left + x}px;
-      top:${rect.top - containerRect.top + y}px;
-      width:${size}px;height:${size}px;
-      background:${col};
-      box-shadow:0 0 ${size*2}px ${col};
-      --tx:${tx}px;--ty:${ty}px;--dur:${dur}s;
-    `;
-
-    riseEl.closest('.rise-handwritten').appendChild(spark);
-    setTimeout(()=>{ if(spark.parentNode) spark.parentNode.removeChild(spark); }, dur * 1000 + 100);
-  }
-
-  // spawn sparks on interval — more frequent near the text
-  setInterval(spawnSpark, 120);
-  // burst on scroll into view
-  const riseObs = new IntersectionObserver(entries => {
-    if(entries[0].isIntersecting){
-      for(let i=0;i<18;i++) setTimeout(spawnSpark, i*60);
-    }
-  }, {threshold:0.3});
-  riseObs.observe(riseEl.closest('.rise-handwritten'));
-})();
 
 
 // ── REAL-TIME STAR FIELD ─────────────────────────────────
@@ -3795,6 +3856,7 @@ const quillToast    = document.getElementById('quill-toast');
 const wCtx          = writingCanvas.getContext('2d', { willReadFrequently: true });
 
 let quillMode       = false;
+let quillReadyAt    = 0;
 let collectedWeapons = new Set();
 let isWriting       = false;
 let lastWriteX = 0, lastWriteY = 0;
@@ -4244,6 +4306,9 @@ function collectWeapon(wid){
 
 function activateQuill(){
   quillMode = true;
+  isWriting = false;
+  strokePoints = [];
+  quillReadyAt = performance.now() + 400; // guard against immediate touch
   cursor.style.display = 'none';
   ring.style.display   = 'none';
   quill.style.display  = 'block';
@@ -4299,7 +4364,7 @@ document.addEventListener('mousemove', e => {
   mx = e.clientX; my = e.clientY;
   // Rolling direction history — keep last 4 points, use oldest→newest for stable vector
   mHist.push({x: mx, y: my});
-  if(mHist.length > 4) mHist.shift();
+  if(mHist.length > 8) mHist.shift();
   // Smoothed velocity for other weapons
   const rawVX = mx - lastMX, rawVY = my - lastMY;
   mvX = mvX * 0.35 + rawVX * 0.65;
