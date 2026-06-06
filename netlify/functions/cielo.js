@@ -14,24 +14,16 @@ exports.handler = async (event) => {
 
   const CIELO_KEY = process.env.CIELO_API_KEY;
   if (!CIELO_KEY) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: "No API key configured" }) };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: "No API key" }) };
   }
 
   try {
-    const { endpoint, wallet, limit } = event.queryStringParameters || {};
+    const { wallet, limit, chain } = event.queryStringParameters || {};
 
-    let url;
-    if (endpoint === "pnl" && wallet) {
-      url = `${CIELO_BASE}/${wallet}/pnl/tokens?limit=${limit || 20}`;
-    } else if (endpoint === "stats" && wallet) {
-      url = `${CIELO_BASE}/${wallet}/pnl/total-stats`;
-    } else if (endpoint === "feed" && wallet) {
-      url = `${CIELO_BASE}/${wallet}/txs?limit=${limit || 20}`;
-    } else if (endpoint === "related" && wallet) {
-      url = `${CIELO_BASE}/${wallet}/related-wallets`;
-    } else {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid endpoint" }) };
-    }
+    // Build feed URL — only free endpoint
+    let url = `${CIELO_BASE}/feed?limit=${limit || 10}`;
+    if (wallet) url += `&wallet=${wallet}`;
+    if (chain) url += `&chainId=${chain}`;
 
     const res = await fetch(url, {
       headers: {
@@ -41,13 +33,22 @@ exports.handler = async (event) => {
     });
 
     if (!res.ok) {
-      return { statusCode: res.status, headers, body: JSON.stringify({ error: `Cielo returned ${res.status}` }) };
+      const text = await res.text();
+      return { 
+        statusCode: res.status, 
+        headers, 
+        body: JSON.stringify({ error: `Cielo ${res.status}`, detail: text }) 
+      };
     }
 
     const data = await res.json();
     return { statusCode: 200, headers, body: JSON.stringify(data) };
 
   } catch (err) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    return { 
+      statusCode: 500, 
+      headers, 
+      body: JSON.stringify({ error: err.message }) 
+    };
   }
 };
