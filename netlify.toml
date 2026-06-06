@@ -1,16 +1,5 @@
-# netlify.toml
-# Add this to the ROOT of your Dead Poet repo
-# It tells Netlify to run the wallet collector every minute
-
 [build]
   publish = "."
 
-[[plugins]]
-  package = "@netlify/plugin-scheduled-functions"
-
 [functions]
-  node_bundler = "esbuild"
-
-[[scheduled-functions]]
-  function = "wallet-collector"
-  schedule = "* * * * *"
+  directory = "netlify/functions"
