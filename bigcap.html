@@ -243,8 +243,9 @@ const WALLETS = [
   { address:"9yYya3F5EJoLnBNKW6z4YoWFrLnvqFJNpZumLGmBaGjx", name:"loop",     tier:"A" },
 ];
 
-const PROXY = "https://deadpoet.xyz/.netlify/functions/dexscreener";
+const PROXY  = "https://deadpoet.xyz/.netlify/functions/dexscreener";
 const CIELO  = "https://deadpoet.xyz/.netlify/functions/cielo";
+const CG_PROXY = "https://deadpoet.xyz/.netlify/functions/coingecko";
 const CG     = "https://api.coingecko.com/api/v3";
 const STARTING = 10000;
 
@@ -385,9 +386,23 @@ function calcSignal(id) {
 // ─── FETCH COINGECKO ──────────────────────────────────────────────────────────
 async function fetchPrices() {
   const ids = COINS.map(c=>c.id).join(",");
-  const res = await fetch(`${CG}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_24hr_vol=true&include_market_cap=true`);
-  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-  const data = await res.json();
+  const params = `ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_24hr_vol=true&include_market_cap=true`;
+  
+  // Try CoinGecko directly first, then fallback through CORS proxy
+  const urls = [
+    `${CG_PROXY}?endpoint=price&ids=${ids}`,
+    `${CG}/simple/price?${params}`,
+    `https://corsproxy.io/?${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?${params}`)}`,
+  ];
+
+  let data = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      if (res.ok) { data = await res.json(); break; }
+    } catch(e) { continue; }
+  }
+  if (!data) throw new Error("CoinGecko rate limited — try again in 60s");
   COINS.forEach(c => {
     if (data[c.id]) {
       if (!coinData[c.id]) coinData[c.id] = { history:[] };
@@ -405,7 +420,7 @@ async function fetchPrices() {
 async function fetchHistory(coinId, delay=0) {
   await new Promise(r=>setTimeout(r,delay));
   try {
-    const res = await fetch(`${CG}/coins/${coinId}/market_chart?vs_currency=usd&days=14&interval=hourly`);
+    const res = await fetch(`${CG_PROXY}?endpoint=history&ids=${coinId}&days=14&interval=hourly`);
     if (!res.ok) return;
     const d = await res.json();
     if (!coinData[coinId]) coinData[coinId]={history:[]};
@@ -1017,7 +1032,7 @@ fetchAll();
 fetchWalletFeed();
 // Fetch history for top 10 coins staggered
 COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
-setInterval(fetchAll, 60000);          // prices every 60s
+setInterval(fetchAll, 90000);          // prices every 90s (CoinGecko free tier limit)
 setInterval(fetchWalletFeed, 60000);   // wallets every 60s
 setInterval(checkExits, 10000);        // check stops every 10s
 setInterval(updatePeaks, 5000);        // track peaks every 5s
