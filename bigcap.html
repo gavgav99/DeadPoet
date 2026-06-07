@@ -250,9 +250,12 @@ const CG     = "https://api.coingecko.com/api/v3";
 const STARTING = 10000;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let coinData    = {};      // { id: { price, change24h, change7d, volume, mcap, history[] } }
-let indicators  = {};      // { id: { rsi, macd, bb, signal, score } }
-let coinProfiles= {};      // adaptive TP per coin
+// Server-side: trading-engine.mjs runs every 60s on Netlify
+// This page reads state from /api/trading-state and displays it
+// Manual trades post to /api/trading-state
+let coinData    = {};
+let indicators  = {};
+let coinProfiles= {};
 let portfolio   = { cash:STARTING, positions:{}, totalValue:STARTING };
 let journal     = [];
 let walletFeed  = [];
@@ -262,6 +265,8 @@ let positionPeaks = {};
 let autoMode    = false;
 let selectedId  = null;
 let settings    = { size:100, timeStop:48, autoSignal:"STRONG BUY" };
+let serverMode  = false; // true when trading-engine is running server-side
+let lastServerState = null;
 
 // ─── ADAPTIVE TP ──────────────────────────────────────────────────────────────
 function getTier(sym) {
@@ -476,6 +481,81 @@ async function fetchHistory(coinId, delay=0) {
     if (!coinData[coinId]) coinData[coinId]={history:[]};
     coinData[coinId].history = d.prices.map(p=>p[1]);
   } catch(e){}
+}
+
+// ─── FETCH SERVER STATE ───────────────────────────────────────────────────────
+async function fetchServerState() {
+  try {
+    const res = await fetch("/api/trading-state");
+    if (!res.ok) return false;
+    const state = await res.json();
+    if (state.error || !state.lastRun) return false;
+
+    // Server is running — use server state
+    serverMode = true;
+    lastServerState = state;
+    portfolio = state.portfolio || portfolio;
+    journal = state.journal || journal;
+    coinProfiles = state.profiles || coinProfiles;
+
+    // Update local price data from server's last prices
+    if (state.lastPrices) {
+      COINS.forEach(c => {
+        if (state.lastPrices[c.id]) {
+          if (!coinData[c.id]) coinData[c.id] = { history:[] };
+          coinData[c.id].price = state.lastPrices[c.id].usd;
+          coinData[c.id].change24h = state.lastPrices[c.id].usd_24h_change||0;
+          coinData[c.id].change7d = state.lastPrices[c.id].usd_7d_change||0;
+          coinData[c.id].volume = state.lastPrices[c.id].usd_24h_vol||0;
+          coinData[c.id].mcap = state.lastPrices[c.id].usd_market_cap||0;
+        }
+      });
+    }
+
+    // Update price history from server
+    if (state.priceHistory) {
+      Object.entries(state.priceHistory).forEach(([id, h]) => {
+        if (!coinData[id]) coinData[id] = {};
+        coinData[id].history = h;
+      });
+    }
+
+    // Recalc indicators from server's history
+    COINS.forEach(c => {
+      const ind = calcSignal(coinData[c.id]?.history||[], coinData[c.id]?.price);
+      if (ind) indicators[c.id] = ind;
+    });
+
+    // Show server mode banner
+    const existing = document.getElementById("server-banner");
+    if (!existing) {
+      const banner = document.createElement("div");
+      banner.id = "server-banner";
+      banner.style.cssText = "background:#0a0a1a;border-bottom:1px solid #a855f733;padding:6px 18px;font-size:9px;color:#a855f7;display:flex;justify-content:space-between;align-items:center;";
+      banner.innerHTML = `<span>⚡ SERVER MODE ACTIVE — trading-engine running 24/7 on Netlify · Last run: ${new Date(state.lastRun).toLocaleTimeString()}</span>
+        <span style="color:#2a3040">${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} total trades · $${state.portfolio?.totalValue?.toFixed(0)||"—"}</span>`;
+      document.getElementById("tabs").insertAdjacentElement("beforebegin", banner);
+    } else {
+      existing.innerHTML = `<span>⚡ SERVER MODE ACTIVE — trading-engine running 24/7 on Netlify · Last run: ${new Date(state.lastRun).toLocaleTimeString()}</span>
+        <span style="color:#2a3040">${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} total trades · $${state.portfolio?.totalValue?.toFixed(0)||"—"}</span>`;
+    }
+
+    renderScanner(); renderPositions(); renderJournal(); renderLearning(); updateBadges();
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+async function postTrade(action, coinId, price, sym, signal, score, targets) {
+  try {
+    await fetch("/api/trading-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, coinId, price, sym, signal, score, targets }),
+    });
+    await fetchServerState();
+  } catch(e) { console.error("Post trade failed:", e); }
 }
 
 async function fetchAll() {
@@ -1082,8 +1162,9 @@ function fmtN(n){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-// Load ALL saved state first — positions, journal, profiles, settings
-loadAll();
+// Try server state first (trading-engine running 24/7)
+// Fall back to localStorage if server not available
+loadAll(); // load local state immediately for fast display
 
 // Show restore banner if we have saved data
 const savedTime = localStorage.getItem("dp_saved");
@@ -1110,11 +1191,24 @@ fetchWalletFeed();
 // Fetch history for top 10 coins staggered
 COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
 
-setInterval(fetchAll, 90000);          // prices every 90s
-setInterval(fetchWalletFeed, 60000);   // wallets every 60s
-setInterval(checkExits, 10000);        // check stops every 10s
-setInterval(updatePeaks, 5000);        // track peaks every 5s
-setInterval(saveAll, 30000);           // autosave every 30s
+// Try server state — if trading-engine is deployed it handles everything
+fetchServerState().then(serverRunning => {
+  if (serverRunning) {
+    console.log("✓ Server mode — trading-engine is running 24/7");
+    // Poll server for updates every 30s instead of running local engine
+    setInterval(fetchServerState, 30000);
+    setInterval(fetchAll, 90000);      // still update live prices for display
+    setInterval(fetchWalletFeed, 60000);
+  } else {
+    console.log("Server mode not available — running locally");
+    // Fall back to local mode
+    setInterval(fetchAll, 90000);
+    setInterval(fetchWalletFeed, 60000);
+    setInterval(checkExits, 10000);
+    setInterval(updatePeaks, 5000);
+    setInterval(saveAll, 30000);
+  }
+});
 </script>
 </body>
 </html>
