@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DEAD POET — Big Cap Intelligence</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060810;font-family:'Courier New',monospace;color:#c0c8d8;font-size:12px;min-height:100vh;}
+#header{background:#07080e;border-bottom:1px solid #0f1620;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100;}
+#logo{color:#00ff88;font-size:15px;font-weight:bold;letter-spacing:4px;}
+#sub{color:#1a2530;font-size:9px;letter-spacing:2px;margin-top:2px;}
+#tabs{display:flex;background:#07080e;border-bottom:1px solid #0f1620;overflow-x:auto;}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:#2a3540;padding:9px 14px;cursor:pointer;font-size:10px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;font-family:inherit;}
+.tab.active{border-bottom-color:#00ff88;color:#00ff88;}
+.panel{display:none;padding:16px;}
+.panel.active{display:block;}
+#error-bar{background:#1a0808;border-bottom:1px solid #ff224433;padding:8px 18px;font-size:10px;color:#ff6644;display:none;}
+select,input[type=number],input[type=text],textarea{background:#0c1018;border:1px solid #1a2030;color:#a0b0c0;padding:5px 8px;border-radius:4px;font-size:10px;font-family:inherit;}
+button{font-family:inherit;cursor:pointer;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{padding:6px 10px;text-align:left;font-weight:normal;font-size:9px;letter-spacing:1px;color:#2a3540;white-space:nowrap;border-bottom:1px solid #0f1820;}
+td{padding:7px 10px;border-bottom:1px solid #0a0f18;vertical-align:middle;}
+tr:hover{background:#0a1018;}
+tr.has-pos{background:#070d0a;}
+.card{background:#07080e;border:1px solid #0f1820;border-radius:6px;padding:14px;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;}
+.card-label{font-size:8px;color:#2a3540;letter-spacing:1px;margin-bottom:5px;}
+.card-val{font-size:17px;font-weight:bold;}
+.empty{color:#2a3540;text-align:center;padding:40px;font-size:12px;}
+#footer{padding:10px 18px;border-top:1px solid #090d14;font-size:8px;color:#1a2228;letter-spacing:1px;margin-top:20px;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div id="logo">◈ DEAD POET</div>
+    <div id="sub">BIG CAP MEMECOIN INTELLIGENCE · COINGECKO LIVE · ADAPTIVE STRATEGY</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <span id="status-dot" style="font-size:10px;color:#f0c040">● LOADING</span>
+    <span id="last-update" style="font-size:9px;color:#2a3040"></span>
+    <button onclick="fetchAll()" style="background:#1a2030;border:1px solid #2a3040;color:#5a6070;padding:4px 10px;border-radius:4px;font-size:9px;">↺ REFRESH</button>
+    <button id="auto-btn" onclick="toggleAuto()" style="padding:5px 12px;border-radius:4px;font-size:10px;background:#1a2030;border:1px solid #2a3040;color:#555;">⚡ AUTO OFF</button>
+    <div id="pnl-badge" style="padding:5px 10px;border-radius:4px;font-size:11px;background:#00ff8811;border:1px solid #00ff8833;color:#00ff88;">$10,000 (0.0%)</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab active" onclick="showTab('scanner')">SCANNER (<span id="coin-count">25</span>)</button>
+  <button class="tab" onclick="showTab('wallets')">WALLETS 🔴</button>
+  <button class="tab" onclick="showTab('positions')">POSITIONS (<span id="pos-count">0</span>)</button>
+  <button class="tab" onclick="showTab('journal')">JOURNAL (<span id="journal-count">0</span>)</button>
+  <button class="tab" onclick="showTab('learning')">LEARNING ✦</button>
+  <button class="tab" onclick="showTab('settings')">SETTINGS</button>
+</div>
+
+<div id="error-bar"></div>
+
+<!-- SCANNER -->
+<div id="panel-scanner" class="panel active">
+  <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+    <select id="sort-by" onchange="renderScanner()">
+      <option value="signal">Sort: Signal</option>
+      <option value="change24h">Sort: 24h Change</option>
+      <option value="volume">Sort: Volume</option>
+    </select>
+    <select id="filter-sig" onchange="renderScanner()">
+      <option value="ALL">All Signals</option>
+      <option value="STRONG BUY">STRONG BUY</option>
+      <option value="BUY">BUY</option>
+      <option value="WATCH">WATCH</option>
+      <option value="NEUTRAL">NEUTRAL</option>
+      <option value="SELL">SELL</option>
+    </select>
+    <span style="font-size:9px;color:#2a3040;margin-left:auto;">
+      Size $<input type="number" id="trade-size" value="100" style="width:60px;margin-left:4px;padding:3px 5px;">
+    </span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr>
+        <th>COIN</th><th>PRICE</th><th>24H%</th><th>7D%</th>
+        <th>VOLUME</th><th>MCAP</th><th>RSI</th><th>MACD</th><th>BB%</th>
+        <th>SIGNAL</th><th>SCORE</th><th>TP1</th><th>TP2</th><th>STOP</th><th>TRADE</th>
+      </tr></thead>
+      <tbody id="scanner-body"></tbody>
+    </table>
+  </div>
+  <div id="scanner-loading" style="text-align:center;padding:60px;color:#00ff88;font-size:11px;letter-spacing:2px;">FETCHING LIVE DATA FROM COINGECKO...</div>
+  <div id="coin-detail" style="margin-top:16px;display:none;"></div>
+</div>
+
+<!-- WALLETS -->
+<div id="panel-wallets" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:14px;color:#e0e8f0;font-weight:bold;">Smart Money Feed</div>
+      <div style="font-size:9px;color:#2a3540;">Real on-chain swaps from Tier S wallets · Cooker, Profit, Orangie, Murad + more · $50+ only</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="feed-status" style="font-size:10px;color:#f0c040">● LOADING</span>
+      <button onclick="fetchWalletFeed()" style="background:#1a2030;border:1px solid #2a3040;color:#5a6070;padding:4px 10px;border-radius:4px;font-size:9px;">↺ REFRESH</button>
+    </div>
+  </div>
+  <div id="convergence-section" style="margin-bottom:20px;display:none;">
+    <div style="font-size:9px;color:#ff4488;letter-spacing:1px;margin-bottom:10px;font-weight:bold;">🔥 CONVERGENCE — MULTIPLE WALLETS BUYING SAME TOKEN</div>
+    <div id="convergence-list"></div>
+  </div>
+  <div id="wallet-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;"></div>
+  <div style="font-size:9px;color:#2a3040;letter-spacing:1px;margin-bottom:10px;">LIVE SWAP FEED</div>
+  <div id="feed-empty" class="empty" style="display:none;">No significant swaps yet.</div>
+  <div style="overflow-x:auto;">
+    <table><thead><tr><th>TIME</th><th>WALLET</th><th>TIER</th><th>ACTION</th><th>TOKEN</th><th>USD</th><th>DEX</th><th>TX</th></tr></thead>
+    <tbody id="feed-body"></tbody></table>
+  </div>
+</div>
+
+<!-- POSITIONS -->
+<div id="panel-positions" class="panel">
+  <div class="cards" id="pos-cards"></div>
+  <div style="font-size:9px;color:#2a3040;letter-spacing:1px;margin-bottom:10px;" id="pos-targets-info">Using adaptive targets per coin</div>
+  <div id="pos-wrap"><div class="empty">No open positions.</div></div>
+</div>
+
+<!-- JOURNAL -->
+<div id="panel-journal" class="panel">
+  <div class="cards" id="journal-cards"></div>
+  <div id="journal-wrap"><div class="empty">No trades yet.</div></div>
+</div>
+
+<!-- LEARNING -->
+<div id="panel-learning" class="panel">
+  <div id="learning-content"><div class="empty">No closed trades yet. Trade and the system learns.</div></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="panel-settings" class="panel">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;">
+    <div class="card">
+      <div class="card-label">DEFAULT TRADE SIZE ($)</div>
+      <input type="number" id="s-size" value="100" onchange="syncSettings()" style="width:100%;padding:8px;font-size:16px;margin-top:4px;">
+      <div style="font-size:8px;color:#2a3040;margin-top:4px;">Overridden by adaptive sizing after enough trades</div>
+    </div>
+    <div class="card">
+      <div class="card-label">TIME STOP (hours)</div>
+      <input type="number" id="s-time" value="48" onchange="syncSettings()" style="width:100%;padding:8px;font-size:16px;margin-top:4px;">
+      <div style="font-size:8px;color:#2a3040;margin-top:4px;">Close any trade open longer than this</div>
+    </div>
+    <div class="card">
+      <div class="card-label">MIN SIGNAL TO AUTO BUY</div>
+      <select id="s-auto-signal" onchange="syncSettings()" style="width:100%;padding:8px;font-size:12px;margin-top:4px;">
+        <option value="STRONG BUY">STRONG BUY only</option>
+        <option value="BUY">BUY or better</option>
+      </select>
+      <div style="font-size:8px;color:#2a3040;margin-top:4px;">Auto trade fires on this signal or stronger</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-label" style="margin-bottom:10px;">COIN TIER DEFAULTS (before adaptive kicks in)</div>
+    <table style="font-size:10px;">
+      <thead><tr><th style="color:#2a3540;padding:4px 8px;">COINS</th><th style="color:#2a3540;padding:4px 8px;">TP1</th><th style="color:#2a3540;padding:4px 8px;">TP2</th><th style="color:#2a3540;padding:4px 8px;">STOP</th><th style="color:#2a3540;padding:4px 8px;">RATIONALE</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:5px 8px;color:#e0e8f0">DOGE, SHIB</td><td style="padding:5px 8px;color:#f0c040">4%</td><td style="padding:5px 8px;color:#00ff88">8%</td><td style="padding:5px 8px;color:#ff4455">6%</td><td style="padding:5px 8px;color:#4a6070">Slow movers, deep liquidity</td></tr>
+        <tr><td style="padding:5px 8px;color:#e0e8f0">PEPE, BONK, FLOKI</td><td style="padding:5px 8px;color:#f0c040">7%</td><td style="padding:5px 8px;color:#00ff88">14%</td><td style="padding:5px 8px;color:#ff4455">10%</td><td style="padding:5px 8px;color:#4a6070">Mid volatility, 24-48h moves</td></tr>
+        <tr><td style="padding:5px 8px;color:#e0e8f0">WIF, BRETT, POPCAT</td><td style="padding:5px 8px;color:#f0c040">10%</td><td style="padding:5px 8px;color:#00ff88">20%</td><td style="padding:5px 8px;color:#ff4455">12%</td><td style="padding:5px 8px;color:#4a6070">Higher vol, SOL ecosystem</td></tr>
+        <tr><td style="padding:5px 8px;color:#e0e8f0">MOG, GIGA, NEIRO</td><td style="padding:5px 8px;color:#f0c040">12%</td><td style="padding:5px 8px;color:#00ff88">22%</td><td style="padding:5px 8px;color:#ff4455">15%</td><td style="padding:5px 8px;color:#4a6070">More volatile, smaller mcap</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:8px;color:#1a2530;margin-top:8px;">After 5 trades per coin these defaults are replaced by observed data automatically.</div>
+  </div>
+  <div class="card">
+    <div class="card-label" style="margin-bottom:8px;">HOW IT WORKS</div>
+    <div style="font-size:10px;color:#3a5060;line-height:2;">
+      <strong style="color:#00ff88;">INDICATORS</strong> — RSI, MACD, Bollinger Bands calculated on real CoinGecko price history<br>
+      <strong style="color:#00ff88;">ADAPTIVE TP</strong> — targets update after every closed trade based on actual coin behavior<br>
+      <strong style="color:#00ff88;">TRAILING STOP</strong> — after TP1 hits, if price gives back 50% of peak gain it exits<br>
+      <strong style="color:#00ff88;">WALLET FEED</strong> — real Cielo data on Cooker, Profit, Orangie, Murad swaps<br>
+      <strong style="color:#00ff88;">CONVERGENCE</strong> — alerts when 2+ wallets buy same token<br>
+      <strong style="color:#f0c040;">DATA</strong> — CoinGecko free API, refreshes every 60s · Wallet feed every 60s<br>
+      <strong style="color:#f0c040;">PAPER TRADING</strong> — all trades are simulated, no real money
+    </div>
+  </div>
+</div>
+
+<div id="footer">DEAD POET INTELLIGENCE · PAPER TRADING ONLY · NOT FINANCIAL ADVICE · DATA: COINGECKO + CIELO VIA DEADPOET.XYZ</div>
+
+<script>
+// ─── COINS ────────────────────────────────────────────────────────────────────
+const COINS = [
+  { id:"dogecoin",            sym:"DOGE",    name:"Dogecoin",           tier:1 },
+  { id:"shiba-inu",           sym:"SHIB",    name:"Shiba Inu",          tier:1 },
+  { id:"pepe",                sym:"PEPE",    name:"Pepe",               tier:2 },
+  { id:"dogwifcoin",          sym:"WIF",     name:"dogwifhat",          tier:3 },
+  { id:"bonk",                sym:"BONK",    name:"Bonk",               tier:2 },
+  { id:"floki",               sym:"FLOKI",   name:"Floki",              tier:2 },
+  { id:"brett-based",         sym:"BRETT",   name:"Brett",              tier:3 },
+  { id:"mog-coin",            sym:"MOG",     name:"Mog Coin",           tier:4 },
+  { id:"popcat",              sym:"POPCAT",  name:"Popcat",             tier:3 },
+  { id:"cat-in-a-dogs-world", sym:"MEW",     name:"cat in a dogs world",tier:3 },
+  { id:"book-of-meme",        sym:"BOME",    name:"Book of Meme",       tier:3 },
+  { id:"turbo",               sym:"TURBO",   name:"Turbo",              tier:3 },
+  { id:"babydoge",            sym:"BABYDOGE",name:"Baby Doge",          tier:2 },
+  { id:"neiro-on-eth",        sym:"NEIRO",   name:"Neiro",              tier:4 },
+  { id:"giga",                sym:"GIGA",    name:"Gigachad",           tier:4 },
+  { id:"michi",               sym:"MICHI",   name:"michi",              tier:4 },
+  { id:"myro",                sym:"MYRO",    name:"Myro",               tier:4 },
+  { id:"dogelon-mars",        sym:"ELON",    name:"Dogelon Mars",       tier:2 },
+  { id:"wen-token",           sym:"WEN",     name:"Wen",                tier:4 },
+  { id:"samoyedcoin",         sym:"SAMO",    name:"Samoyedcoin",        tier:4 },
+  { id:"coq-inu",             sym:"COQ",     name:"Coq Inu",            tier:4 },
+  { id:"sundog",              sym:"SUNDOG",  name:"Sundog",             tier:3 },
+  { id:"smoking-chicken-fish",sym:"SCF",     name:"Smoking Chicken Fish",tier:4},
+  { id:"landwolf",            sym:"WOLF",    name:"Landwolf",           tier:4 },
+  { id:"jesus-coin",          sym:"JESUS",   name:"Jesus Coin",         tier:4 },
+];
+
+// ─── TIER DEFAULTS (researched 24-48h swing data) ────────────────────────────
+const TIER_DEFAULTS = {
+  1: { tp1:4,  tp2:8,  stop:6  }, // DOGE/SHIB — avg daily 2-5%
+  2: { tp1:7,  tp2:14, stop:10 }, // PEPE/BONK — avg daily 5-10%
+  3: { tp1:10, tp2:20, stop:12 }, // WIF/BRETT — avg daily 8-15%
+  4: { tp1:12, tp2:22, stop:15 }, // MOG/GIGA  — avg daily 10-20%
+};
+
+// ─── SMART WALLETS ────────────────────────────────────────────────────────────
+const WALLETS = [
+  { address:"H812jAz5Z5t8cvfXoxbE27Q2F89eovpib5kpXawLAFdS", name:"cooker",   tier:"S" },
+  { address:"ETcmHKVYg2TrU83cZbP6BNoitfztUdGVagWNSmGyzycG", name:"profit",   tier:"S" },
+  { address:"DuQabFqdC9eeBULVa7TTdZYxe8vK8ct5DZr4Xcf7docy", name:"ORANGIE",  tier:"S" },
+  { address:"7QZGS7MQ4S6hRmE8iXoFTXgQ2hXVUCho2ZhgeWvLNPZT", name:"murad",    tier:"S" },
+  { address:"9X5n5i1mugTjgGPhqf1KJDt8r4kD8TF3s62ttbxKzFHa", name:"dingaling",tier:"S" },
+  { address:"BtMBMPkoNbnLF9Xn552guQq528KKXcsNBNNBre3oaQtr",  name:"letterbomb",tier:"S"},
+  { address:"JDd3hy3gQn2V982mi1zqhNqUw1GfV2UL6g76STojCJPN", name:"ratwizard",tier:"S" },
+  { address:"76ZUBj1JLz7arTVHSRJok5oSTEqDuVBgySFMVHtzxzZc", name:"cabal guy",tier:"S" },
+  { address:"HaZtFxgw99iM97LxmwFuDW6k4MP1XwsWTGoy7GUoSELj", name:"cobie",    tier:"S" },
+  { address:"2fg5QD1eD7rzNNCsvnhmXFm5hqNgwTTG8p7kQ6f3rx6f", name:"cupsey",   tier:"A" },
+  { address:"BCnqsPEtA1TkgednYEebt6L3QVcZNdtXxqaUWGMbWopE", name:"kreo",     tier:"A" },
+  { address:"9yYya3F5EJoLnBNKW6z4YoWFrLnvqFJNpZumLGmBaGjx", name:"loop",     tier:"A" },
+];
+
+const PROXY = "https://deadpoet.xyz/.netlify/functions/dexscreener";
+const CIELO  = "https://deadpoet.xyz/.netlify/functions/cielo";
+const CG     = "https://api.coingecko.com/api/v3";
+const STARTING = 10000;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let coinData    = {};      // { id: { price, change24h, change7d, volume, mcap, history[] } }
+let indicators  = {};      // { id: { rsi, macd, bb, signal, score } }
+let coinProfiles= {};      // adaptive TP per coin
+let portfolio   = { cash:STARTING, positions:{}, totalValue:STARTING };
+let journal     = [];
+let walletFeed  = [];
+let convergence = [];
+let knownTx     = new Set();
+let positionPeaks = {};
+let autoMode    = false;
+let selectedId  = null;
+let settings    = { size:100, timeStop:48, autoSignal:"STRONG BUY" };
+
+// ─── ADAPTIVE TP ──────────────────────────────────────────────────────────────
+function getTier(sym) {
+  const c = COINS.find(x=>x.sym===sym);
+  return c ? c.tier : 4;
+}
+
+function getTargets(sym) {
+  const profile = coinProfiles[sym];
+  if (profile && profile.trades.length >= 5) {
+    return { tp1:profile.tp1, tp2:profile.tp2, stop:profile.stop, source:"ADAPTIVE", n:profile.trades.length };
+  }
+  const def = TIER_DEFAULTS[getTier(sym)] || TIER_DEFAULTS[4];
+  return { ...def, source:"DEFAULT", n:profile?.trades.length||0 };
+}
+
+function recordTrade(sym, data) {
+  if (!coinProfiles[sym]) coinProfiles[sym] = { trades:[], tp1:0, tp2:0, stop:0, winRate:0 };
+  const p = coinProfiles[sym];
+  p.trades.push(data);
+  if (p.trades.length > 30) p.trades.shift();
+
+  const wins = p.trades.filter(t=>t.won);
+  const losses = p.trades.filter(t=>!t.won);
+  const avgWin = wins.length > 0 ? wins.reduce((s,t)=>s+t.pnlPct,0)/wins.length : TIER_DEFAULTS[getTier(sym)].tp2;
+  const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((s,t)=>s+t.pnlPct,0)/losses.length) : TIER_DEFAULTS[getTier(sym)].stop;
+
+  p.tp2 = Math.max(avgWin * 0.85, TIER_DEFAULTS[getTier(sym)].tp2 * 0.5);
+  p.tp1 = p.tp2 * 0.5;
+  p.stop = Math.min(avgLoss * 1.1, 25);
+  p.winRate = (wins.length/p.trades.length)*100;
+  p.avgPeak = avgWin;
+  p.confidence = p.trades.length>=10?"HIGH":p.trades.length>=5?"MEDIUM":"LOW";
+
+  try { localStorage.setItem("dp_profiles", JSON.stringify(coinProfiles)); } catch(e){}
+}
+
+function loadProfiles() {
+  try {
+    const s = localStorage.getItem("dp_profiles");
+    if (s) coinProfiles = JSON.parse(s);
+  } catch(e){}
+}
+
+// ─── INDICATOR MATH ───────────────────────────────────────────────────────────
+function calcRSI(prices, n=14) {
+  if (prices.length < n+1) return null;
+  const ch = prices.slice(1).map((p,i)=>p-prices[i]);
+  const rc = ch.slice(-n);
+  const g = rc.filter(c=>c>0).reduce((a,b)=>a+b,0)/n;
+  const l = Math.abs(rc.filter(c=>c<0).reduce((a,b)=>a+b,0))/n;
+  return l===0?100:100-100/(1+g/l);
+}
+
+function calcEMA(prices, n) {
+  if (prices.length < n) return null;
+  const k = 2/(n+1);
+  let e = prices.slice(0,n).reduce((a,b)=>a+b,0)/n;
+  for (let i=n;i<prices.length;i++) e=prices[i]*k+e*(1-k);
+  return e;
+}
+
+function calcMACD(prices) {
+  const e12=calcEMA(prices,12), e26=calcEMA(prices,26);
+  if (!e12||!e26) return null;
+  return { val:e12-e26, bullish:e12>e26 };
+}
+
+function calcBB(prices, n=20) {
+  if (prices.length<n) return null;
+  const sl=prices.slice(-n), sma=sl.reduce((a,b)=>a+b,0)/n;
+  const std=Math.sqrt(sl.reduce((s,p)=>s+Math.pow(p-sma,2),0)/n);
+  return { upper:sma+2*std, middle:sma, lower:sma-2*std };
+}
+
+function calcSignal(id) {
+  const h = coinData[id]?.history || [];
+  const price = coinData[id]?.price;
+  if (!h.length || !price) return null;
+
+  const rsi = calcRSI(h,14);
+  const macd = calcMACD(h);
+  const bb = calcBB(h,20);
+
+  let bull=0, bear=0, reasons=[];
+
+  if (rsi!=null) {
+    if (rsi<30){bull+=3;reasons.push("RSI oversold");}
+    else if (rsi<40){bull+=2;reasons.push("RSI cooling");}
+    else if (rsi<50){bull+=1;}
+    else if (rsi>75){bear+=3;reasons.push("RSI overbought");}
+    else if (rsi>65){bear+=2;reasons.push("RSI elevated");}
+    else if (rsi>55){bear+=1;}
+  }
+  if (macd) {
+    if (macd.bullish){bull+=2;reasons.push("MACD bullish");}
+    else{bear+=2;reasons.push("MACD bearish");}
+  }
+  if (bb && price) {
+    const pct = ((price-bb.lower)/(bb.upper-bb.lower))*100;
+    if (price<bb.lower){bull+=3;reasons.push("Below lower BB");}
+    else if (price>bb.upper){bear+=3;reasons.push("Above upper BB");}
+    else if (pct<30){bull+=1;}
+    else if (pct>70){bear+=1;}
+  }
+
+  const total=bull+bear;
+  const score=total>0?Math.round((bull/total)*100):50;
+  let signal="NEUTRAL";
+  if (score>=75) signal="STRONG BUY";
+  else if (score>=62) signal="BUY";
+  else if (score>=53) signal="WATCH";
+  else if (score<=25) signal="STRONG SELL";
+  else if (score<=38) signal="SELL";
+  else if (score<=47) signal="WEAK SELL";
+
+  const bbPct = bb && price ? Math.min(100,Math.max(0,((price-bb.lower)/(bb.upper-bb.lower))*100)) : null;
+
+  return { rsi, macd, bb, bbPct, signal, score, reasons };
+}
+
+// ─── FETCH COINGECKO ──────────────────────────────────────────────────────────
+async function fetchPrices() {
+  const ids = COINS.map(c=>c.id).join(",");
+  const res = await fetch(`${CG}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_24hr_vol=true&include_market_cap=true`);
+  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
+  const data = await res.json();
+  COINS.forEach(c => {
+    if (data[c.id]) {
+      if (!coinData[c.id]) coinData[c.id] = { history:[] };
+      const d = data[c.id];
+      coinData[c.id].price = d.usd;
+      coinData[c.id].change24h = d.usd_24h_change||0;
+      coinData[c.id].change7d = d.usd_7d_change||0;
+      coinData[c.id].volume = d.usd_24h_vol||0;
+      coinData[c.id].mcap = d.usd_market_cap||0;
+      coinData[c.id].history = [...(coinData[c.id].history||[]).slice(-199), d.usd];
+    }
+  });
+}
+
+async function fetchHistory(coinId, delay=0) {
+  await new Promise(r=>setTimeout(r,delay));
+  try {
+    const res = await fetch(`${CG}/coins/${coinId}/market_chart?vs_currency=usd&days=14&interval=hourly`);
+    if (!res.ok) return;
+    const d = await res.json();
+    if (!coinData[coinId]) coinData[coinId]={history:[]};
+    coinData[coinId].history = d.prices.map(p=>p[1]);
+  } catch(e){}
+}
+
+async function fetchAll() {
+  setStatus("FETCHING","#f0c040");
+  try {
+    await fetchPrices();
+    // Recalc indicators
+    COINS.forEach(c => {
+      const ind = calcSignal(c.id);
+      if (ind) indicators[c.id] = ind;
+    });
+    // Auto trade
+    if (autoMode) runAutoTrader();
+    checkExits();
+    updatePeaks();
+    renderScanner();
+    renderPositions();
+    updateBadges();
+    document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
+    document.getElementById("scanner-loading").style.display = "none";
+    setStatus(`LIVE · ${COINS.length} coins`, "#00ff88");
+    hideError();
+  } catch(e) {
+    showError(`CoinGecko error: ${e.message} — rate limited or offline`);
+    setStatus("ERROR","#ff4455");
+  }
+}
+
+// ─── WALLET FEED ─────────────────────────────────────────────────────────────
+async function fetchWalletFeed() {
+  document.getElementById("feed-status").textContent = "● FETCHING";
+  document.getElementById("feed-status").style.color = "#f0c040";
+  const MIN_USD = 50;
+  try {
+    const results = [];
+    for (let i=0; i<Math.min(WALLETS.length,6); i++) {
+      const w = WALLETS[i];
+      try {
+        const res = await fetch(`${CIELO}?wallet=${w.address}&limit=10&chain=solana`);
+        if (res.ok) {
+          const d = await res.json();
+          (d?.data?.items||[]).filter(tx=>tx.tx_type==="swap"&&!knownTx.has(tx.tx_hash)).forEach(tx=>{
+            knownTx.add(tx.tx_hash);
+            const usd = Math.max(tx.token0_amount_usd||0,tx.token1_amount_usd||0,tx.amount_usd||0);
+            if (usd<MIN_USD) return;
+            const isSell = tx.is_sell;
+            const token = isSell
+              ? {name:tx.token0_name,symbol:tx.token0_symbol,address:tx.token0_address,usd:tx.token0_amount_usd}
+              : {name:tx.token1_name,symbol:tx.token1_symbol,address:tx.token1_address,usd:tx.token1_amount_usd};
+            results.push({ walletName:w.name, walletTier:w.tier, isBuy:!isSell, token, usdValue:usd, dex:tx.dex||"—", timestamp:tx.timestamp, txHash:tx.tx_hash });
+          });
+        }
+      } catch(e){}
+      await new Promise(r=>setTimeout(r,300));
+    }
+    results.sort((a,b)=>b.timestamp-a.timestamp);
+    walletFeed = [...results,...walletFeed].slice(0,200);
+
+    // Convergence detection
+    const cutoff = Date.now()/1000-14400;
+    const byToken = {};
+    walletFeed.filter(t=>t.isBuy&&t.timestamp>=cutoff).forEach(t=>{
+      const k = t.token?.address;
+      if (!k||k.includes("native")||k.includes("So1111")) return;
+      if (!byToken[k]) byToken[k]=[];
+      if (!byToken[k].find(b=>b.walletName===t.walletName)) byToken[k].push(t);
+    });
+    convergence = Object.entries(byToken).filter(([,b])=>b.length>=2).map(([addr,buys])=>({
+      tokenAddress:addr, tokenName:buys[0].token?.name, tokenSymbol:buys[0].token?.symbol,
+      buyers:buys.map(b=>b.walletName), tierS:buys.filter(b=>b.walletTier==="S").length,
+      totalUsd:buys.reduce((s,b)=>s+b.usdValue,0), time:new Date(Math.max(...buys.map(b=>b.timestamp))*1000).toLocaleTimeString(),
+    })).sort((a,b)=>b.tierS-a.tierS);
+
+    renderWalletFeed();
+    document.getElementById("feed-status").textContent = `● LIVE · ${walletFeed.length} swaps`;
+    document.getElementById("feed-status").style.color = "#00ff88";
+  } catch(e) {
+    document.getElementById("feed-status").textContent = `⚠ ${e.message}`;
+    document.getElementById("feed-status").style.color = "#ff4455";
+  }
+}
+
+// ─── TRADING ─────────────────────────────────────────────────────────────────
+function updatePeaks() {
+  COINS.forEach(c => {
+    if (portfolio.positions[c.id] && coinData[c.id]?.price) {
+      positionPeaks[c.id] = Math.max(positionPeaks[c.id]||0, coinData[c.id].price);
+    }
+  });
+}
+
+function runAutoTrader() {
+  COINS.forEach(c => {
+    const ind = indicators[c.id];
+    if (!ind) return;
+    const signalOk = settings.autoSignal==="STRONG BUY" ? ind.signal==="STRONG BUY" : ind.signal==="STRONG BUY"||ind.signal==="BUY";
+    if (!signalOk) return;
+    if (portfolio.positions[c.id]) return;
+    if (portfolio.cash < settings.size) return;
+    openTrade(c, true);
+  });
+}
+
+function checkExits() {
+  const now = Date.now();
+  Object.entries({...portfolio.positions}).forEach(([id,pos]) => {
+    const coin = COINS.find(c=>c.id===id);
+    const price = coinData[id]?.price;
+    if (!price||!coin) return;
+    const pnlPct = ((price-pos.entryPrice)/pos.entryPrice)*100;
+    const ageH = (now-pos.entryTime)/3600000;
+    const t = pos.targets;
+
+    // Stop loss
+    if (pnlPct <= -t.stop) { closeTrade(id, price, pnlPct, `STOP LOSS -${t.stop.toFixed(1)}% (${t.source})`); return; }
+    // Time stop
+    if (ageH >= settings.timeStop) { closeTrade(id, price, pnlPct, `TIME STOP ${settings.timeStop}H`); return; }
+    // Trailing stop after TP1
+    if (pos.tp1Hit) {
+      const peak = positionPeaks[id]||price;
+      const peakPnl = ((peak-pos.entryPrice)/pos.entryPrice)*100;
+      if (pnlPct <= peakPnl*0.5 && pnlPct > 0) { closeTrade(id,price,pnlPct,"TRAILING STOP"); return; }
+    }
+    // TP1 — sell half
+    if (pnlPct >= t.tp1 && !pos.tp1Hit) {
+      const sellQty = pos.qty/2;
+      portfolio.cash += sellQty*price;
+      portfolio.positions[id] = {...pos, qty:pos.qty-sellQty, tp1Hit:true};
+      addNote(pos.journalId, `TP1 +${t.tp1.toFixed(1)}% hit — sold 50%`);
+    }
+    // TP2 — close rest
+    if (pnlPct >= t.tp2) { closeTrade(id,price,pnlPct,`TP2 +${t.tp2.toFixed(1)}% (${t.source})`); }
+  });
+  // Recalc value
+  let pv=0;
+  Object.entries(portfolio.positions).forEach(([id,pos])=>{
+    pv += (coinData[id]?.price||pos.entryPrice)*pos.qty;
+  });
+  portfolio.totalValue = portfolio.cash+pv;
+}
+
+function openTrade(coin, isAuto=false) {
+  if (portfolio.cash<settings.size||portfolio.positions[coin.id]) return;
+  const price = coinData[coin.id]?.price;
+  if (!price) return;
+  const qty = settings.size/price;
+  const jid = `${coin.id}-${Date.now()}`;
+  const targets = getTargets(coin.sym);
+  portfolio.cash -= settings.size;
+  portfolio.positions[coin.id] = { qty, originalQty:qty, entryPrice:price, tp1Hit:false, journalId:jid, entryTime:Date.now(), targets };
+  positionPeaks[coin.id] = price;
+  const ind = indicators[coin.id]||{};
+  journal.push({ id:jid, coinId:coin.id, sym:coin.sym, name:coin.name, status:"OPEN", entryPrice:price, exitPrice:null, qty, amount:settings.size, pnlPct:0, won:null, type:isAuto?"AUTO":"MANUAL", signal:ind.signal||"—", score:ind.score||50, targets, timestamp:new Date().toLocaleTimeString(), closeTime:null, exitReason:null, notes:"" });
+  renderScanner(); renderPositions(); renderJournal(); updateBadges();
+}
+
+function closeTrade(coinId, price, pnlPct, reason) {
+  const pos = portfolio.positions[coinId];
+  if (!pos) return;
+  const coin = COINS.find(c=>c.id===coinId);
+  portfolio.cash += pos.qty*price;
+
+  // Record for adaptive learning
+  const jEntry = journal.find(j=>j.id===pos.journalId&&j.status==="OPEN");
+  if (jEntry && coin) {
+    const peakPrice = positionPeaks[coinId]||price;
+    recordTrade(coin.sym, {
+      entryPrice:pos.entryPrice, exitPrice:price, peakPrice,
+      pnlPct, peakPnl:((peakPrice-pos.entryPrice)/pos.entryPrice)*100,
+      won:pnlPct>0, hoursHeld:((Date.now()-pos.entryTime)/3600000).toFixed(1),
+      exitReason:reason, signal:jEntry.signal,
+    });
+  }
+
+  delete portfolio.positions[coinId];
+  delete positionPeaks[coinId];
+  journal = journal.map(j => j.id===pos.journalId&&j.status==="OPEN"
+    ? {...j, status:"CLOSED", exitPrice:price, pnlPct, won:pnlPct>0, exitReason:reason, closeTime:new Date().toLocaleTimeString()}
+    : j);
+  renderJournal(); renderLearning(); renderPositions(); updateBadges();
+}
+
+function sellManual(coinId) {
+  const price = coinData[coinId]?.price;
+  const pos = portfolio.positions[coinId];
+  if (!price||!pos) return;
+  const pnlPct = ((price-pos.entryPrice)/pos.entryPrice)*100;
+  closeTrade(coinId,price,pnlPct,"MANUAL SELL");
+  renderScanner();
+}
+
+function addNote(jid, note) {
+  journal = journal.map(j=>j.id===jid?{...j,notes:(j.notes||"")+" | "+note}:j);
+}
+
+// ─── RENDER SCANNER ───────────────────────────────────────────────────────────
+function renderScanner() {
+  const sortBy = document.getElementById("sort-by").value;
+  const filterSig = document.getElementById("filter-sig").value;
+  let display = COINS.filter(c=>coinData[c.id]?.price);
+  if (filterSig!=="ALL") display=display.filter(c=>indicators[c.id]?.signal===filterSig);
+  display.sort((a,b)=>{
+    if (sortBy==="signal") return (indicators[b.id]?.score||50)-(indicators[a.id]?.score||50);
+    if (sortBy==="change24h") return (coinData[b.id]?.change24h||0)-(coinData[a.id]?.change24h||0);
+    if (sortBy==="volume") return (coinData[b.id]?.volume||0)-(coinData[a.id]?.volume||0);
+    return 0;
+  });
+
+  const SIG = {"STRONG BUY":"#00ff88","BUY":"#44ffaa","WATCH":"#f0c040","NEUTRAL":"#555","WEAK SELL":"#ffaa55","SELL":"#ff7744","STRONG SELL":"#ff2244"};
+  const body = document.getElementById("scanner-body");
+
+  body.innerHTML = display.map(coin=>{
+    const d = coinData[coin.id]||{};
+    const ind = indicators[coin.id]||{};
+    const hasPos = !!portfolio.positions[coin.id];
+    const pos = portfolio.positions[coin.id];
+    const t = getTargets(coin.sym);
+    const sc = SIG[ind.signal]||"#555";
+    const livePnl = pos ? ((d.price-pos.entryPrice)/pos.entryPrice*100) : null;
+
+    const tradeBtn = hasPos
+      ? `<span style="color:${livePnl>=0?"#00ff88":"#ff4455"};font-size:9px;font-weight:bold">${livePnl>=0?"+":""}${livePnl?.toFixed(1)}%</span>
+         <button onclick="event.stopPropagation();sellManual('${coin.id}')" style="background:#ff224415;border:1px solid #ff224440;color:#ff2244;padding:2px 6px;border-radius:3px;font-size:9px;margin-left:3px">SELL</button>`
+      : `<button onclick="event.stopPropagation();openTrade(COINS.find(c=>c.id==='${coin.id}'))" style="background:#00ff8815;border:1px solid #00ff8840;color:#00ff88;padding:3px 7px;border-radius:3px;font-size:9px">BUY</button>`;
+
+    return `<tr class="${hasPos?"has-pos":""}" onclick="selectCoin('${coin.id}')" style="cursor:pointer">
+      <td><div style="color:#e0e8f0;font-weight:bold">${coin.sym}</div><div style="color:#2a3540;font-size:9px">${coin.name}</div></td>
+      <td style="color:#b0b8c8;white-space:nowrap">$${fmtP(d.price)}</td>
+      <td style="color:${d.change24h>=0?"#00ff88":"#ff4455"};white-space:nowrap;font-weight:bold">${d.change24h>=0?"+":""}${d.change24h?.toFixed(1)}%</td>
+      <td style="color:${(d.change7d||0)>=0?"#00ff88":"#ff4455"};white-space:nowrap">${(d.change7d>=0?"+":"")}${d.change7d?.toFixed(1)||"—"}%</td>
+      <td style="color:#6070a0">${fmtN(d.volume)}</td>
+      <td style="color:#5a6070">${fmtN(d.mcap)}</td>
+      <td style="color:${d.rsi_color||"#888"}">${ind.rsi!=null?ind.rsi.toFixed(0):"—"}</td>
+      <td style="color:${ind.macd?.bullish?"#00ff88":"#ff4455"}">${ind.macd?(ind.macd.bullish?"▲":"▼"):"—"}</td>
+      <td style="color:${ind.bbPct!=null?(ind.bbPct<25?"#00ff88":ind.bbPct>75?"#ff4455":"#888"):"#555"}">${ind.bbPct!=null?ind.bbPct.toFixed(0)+"%":"—"}</td>
+      <td><span style="color:${sc};border:1px solid ${sc}33;padding:2px 6px;border-radius:3px;font-size:9px;white-space:nowrap">${ind.signal||"—"}</span></td>
+      <td><div style="display:flex;align-items:center;gap:4px"><div style="width:30px;height:3px;background:#12192a;border-radius:2px"><div style="width:${ind.score||0}%;height:100%;background:${sc};border-radius:2px"></div></div><span style="color:${sc};font-size:10px">${ind.score||"—"}</span></div></td>
+      <td style="color:#f0c040;font-size:9px">+${t.tp1}%<br><span style="color:#2a3540;font-size:8px">${t.source}</span></td>
+      <td style="color:#00ff88;font-size:9px">+${t.tp2}%</td>
+      <td style="color:#ff4455;font-size:9px">-${t.stop}%</td>
+      <td onclick="event.stopPropagation()">${tradeBtn}</td>
+    </tr>`;
+  }).join("");
+
+  renderDetail();
+}
+
+function selectCoin(id) {
+  selectedId = selectedId===id?null:id;
+  renderScanner();
+}
+
+function renderDetail() {
+  const el = document.getElementById("coin-detail");
+  if (!selectedId) { el.style.display="none"; return; }
+  const coin=COINS.find(c=>c.id===selectedId);
+  const d=coinData[selectedId]||{};
+  const ind=indicators[selectedId]||{};
+  const t=getTargets(coin?.sym||"");
+  const hasPos=!!portfolio.positions[selectedId];
+  const sc={"STRONG BUY":"#00ff88","BUY":"#44ffaa","WATCH":"#f0c040","NEUTRAL":"#555","SELL":"#ff7744","STRONG SELL":"#ff2244"}[ind.signal]||"#555";
+  const profile=coinProfiles[coin?.sym];
+  el.style.display="block";
+  el.innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="color:#e0e8f0;font-size:14px;font-weight:bold">${coin?.sym} — ${coin?.name}</div>
+        <div style="color:#2a3540;font-size:9px">Tier ${coin?.tier} · ${fmtN(d.mcap)} mcap · ${fmtN(d.volume)} vol</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${!hasPos
+          ?`<button onclick="openTrade(COINS.find(c=>c.id==='${selectedId}'))" style="background:#00ff8815;border:1px solid #00ff88;color:#00ff88;padding:7px 14px;border-radius:4px;font-size:10px">BUY $${settings.size}</button>`
+          :`<button onclick="sellManual('${selectedId}')" style="background:#ff224415;border:1px solid #ff2244;color:#ff2244;padding:7px 14px;border-radius:4px;font-size:10px">SELL</button>`}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px;">
+      ${[
+        {l:"SIGNAL",v:ind.signal||"—",c:sc},
+        {l:"SCORE",v:`${ind.score||"—"}/100`,c:sc},
+        {l:"RSI",v:ind.rsi!=null?ind.rsi.toFixed(1):"—",c:ind.rsi<30?"#00ff88":ind.rsi>70?"#ff4455":"#f0c040"},
+        {l:"MACD",v:ind.macd?(ind.macd.bullish?"BULLISH":"BEARISH"):"—",c:ind.macd?.bullish?"#00ff88":"#ff4455"},
+        {l:"BB POSITION",v:ind.bbPct!=null?`${ind.bbPct.toFixed(0)}%`:"—",c:"#f0c040"},
+        {l:"TP1 TARGET",v:`+${t.tp1}%`,c:"#f0c040"},
+        {l:"TP2 TARGET",v:`+${t.tp2}%`,c:"#00ff88"},
+        {l:"STOP LOSS",v:`-${t.stop}%`,c:"#ff4455"},
+        {l:"TARGET SOURCE",v:t.source,c:t.source==="ADAPTIVE"?"#a855f7":"#7080a0"},
+        {l:"TRADES OBSERVED",v:t.n,c:t.n>=10?"#00ff88":t.n>=5?"#f0c040":"#ff7744"},
+      ].map(x=>`<div style="background:#0a0d14;border-radius:4px;padding:9px;">
+        <div style="font-size:8px;color:#2a3540;margin-bottom:4px">${x.l}</div>
+        <div style="font-size:12px;color:${x.c};font-weight:bold">${x.v}</div>
+      </div>`).join("")}
+    </div>
+    ${ind.reasons?.length>0?`<div style="background:#0a0d14;border-radius:4px;padding:9px;">
+      <div style="font-size:8px;color:#2a3540;margin-bottom:6px">SIGNAL REASONS</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">${ind.reasons.map(r=>`<span style="background:#12192a;padding:2px 8px;border-radius:3px;font-size:9px;color:#8090a0">${r}</span>`).join("")}</div>
+    </div>`:""}
+    ${profile?`<div style="background:#0a0d14;border-radius:4px;padding:9px;margin-top:8px;">
+      <div style="font-size:8px;color:#a855f7;margin-bottom:6px">ADAPTIVE PROFILE (${profile.trades.length} observed trades)</div>
+      <div style="display:flex;gap:16px;font-size:10px;flex-wrap:wrap;">
+        <div><div style="font-size:8px;color:#2a3040">WIN RATE</div><div style="color:${profile.winRate>=50?"#00ff88":"#ff4455"};font-weight:bold">${profile.winRate?.toFixed(0)}%</div></div>
+        <div><div style="font-size:8px;color:#2a3040">AVG PEAK</div><div style="color:#a855f7;font-weight:bold">+${profile.avgPeak?.toFixed(1)}%</div></div>
+        <div><div style="font-size:8px;color:#2a3040">CONFIDENCE</div><div style="color:${profile.confidence==="HIGH"?"#00ff88":profile.confidence==="MEDIUM"?"#f0c040":"#ff7744"}">${profile.confidence}</div></div>
+      </div>
+    </div>`:""}
+  </div>`;
+}
+
+// ─── RENDER WALLET FEED ───────────────────────────────────────────────────────
+function renderWalletFeed() {
+  // Convergence
+  const cs=document.getElementById("convergence-section"), cl=document.getElementById("convergence-list");
+  if (convergence.length>0) {
+    cs.style.display="block";
+    cl.innerHTML=convergence.map(a=>`<div style="background:#0f0820;border:1px solid #ff448844;border-radius:6px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div><div style="color:#ff88cc;font-weight:bold;font-size:13px">${a.tokenSymbol} — ${a.tokenName}</div><div style="color:#4a3050;font-size:9px;margin-top:2px">${a.tokenAddress?.slice(0,20)}...</div></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <div><div style="font-size:8px;color:#2a3040">BUYERS</div><div style="color:#00ff88;font-weight:bold;font-size:11px">${a.buyers.join(" + ")}</div></div>
+        <div><div style="font-size:8px;color:#2a3040">TIER S</div><div style="color:#ff4488;font-weight:bold">${a.tierS}</div></div>
+        <div><div style="font-size:8px;color:#2a3040">TOTAL</div><div style="color:#f0c040;font-weight:bold">$${a.totalUsd.toFixed(0)}</div></div>
+        <div><div style="font-size:8px;color:#2a3040">TIME</div><div style="color:#7080a0;font-size:10px">${a.time}</div></div>
+      </div>
+      <div style="background:#ff448820;border:1px solid #ff4488;color:#ff88cc;padding:4px 12px;border-radius:4px;font-size:10px;font-weight:bold">⚡ HIGH CONVICTION</div>
+    </div>`).join("");
+  } else { cs.style.display="none"; }
+
+  // Cards
+  document.getElementById("wallet-cards").innerHTML = WALLETS.slice(0,6).map(w=>{
+    const t=walletFeed.filter(x=>x.walletName===w.name);
+    const tc=w.tier==="S"?"#ff4488":"#f0c040";
+    return `<div style="background:#08090f;border:1px solid ${tc}22;border-radius:6px;padding:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><div style="color:#e0e8f0;font-weight:bold;font-size:11px">${w.name}</div><span style="color:${tc};font-size:8px;border:1px solid ${tc}44;padding:1px 5px;border-radius:3px">TIER ${w.tier}</span></div>
+      <div style="display:flex;gap:12px;font-size:10px;">
+        <div><div style="font-size:8px;color:#2a3040">BUYS</div><div style="color:#00ff88;font-weight:bold">${t.filter(x=>x.isBuy).length}</div></div>
+        <div><div style="font-size:8px;color:#2a3040">SELLS</div><div style="color:#ff4455;font-weight:bold">${t.filter(x=>!x.isBuy).length}</div></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Table
+  const empty=document.getElementById("feed-empty"), tbody=document.getElementById("feed-body");
+  if (walletFeed.length===0){empty.style.display="block";tbody.innerHTML="";return;}
+  empty.style.display="none";
+  tbody.innerHTML=walletFeed.slice(0,100).map(tx=>{
+    const big=tx.usdValue>=1000;
+    const tc=tx.walletTier==="S"?"#ff4488":"#f0c040";
+    return `<tr style="background:${big?"#0a1208":"transparent"}">
+      <td style="color:#3a4550;font-size:9px;white-space:nowrap">${new Date(tx.timestamp*1000).toLocaleTimeString()}</td>
+      <td style="color:#00aeff;font-weight:bold">${tx.walletName}</td>
+      <td><span style="color:${tc};border:1px solid ${tc}33;padding:1px 5px;border-radius:3px;font-size:8px">TIER ${tx.walletTier}</span></td>
+      <td style="color:${tx.isBuy?"#00ff88":"#ff4455"};font-weight:bold;font-size:10px">${tx.isBuy?"▲ BUY":"▼ SELL"}</td>
+      <td><div style="color:#e0e8f0;font-weight:bold">${tx.token?.symbol||"—"}</div><div style="color:#2a3040;font-size:9px">${(tx.token?.name||"").slice(0,18)}</div></td>
+      <td style="color:${big?"#f0c040":"#7080a0"};font-weight:${big?"bold":"normal"}">$${tx.usdValue.toFixed(2)}${big?" 🔥":""}</td>
+      <td style="color:#4a6070;font-size:9px">${tx.dex}</td>
+      <td><a href="https://solscan.io/tx/${tx.txHash}" target="_blank" style="color:#a855f7;font-size:9px;text-decoration:none">↗</a></td>
+    </tr>`;
+  }).join("");
+}
+
+// ─── RENDER POSITIONS ─────────────────────────────────────────────────────────
+function renderPositions() {
+  const pnl=portfolio.totalValue-STARTING, pnlPct=(pnl/STARTING)*100;
+  const posCount=Object.keys(portfolio.positions).length;
+  document.getElementById("pos-count").textContent=posCount;
+  document.getElementById("pos-cards").innerHTML=[
+    {l:"PORTFOLIO",v:`$${portfolio.totalValue.toFixed(2)}`,c:"#e0e8f0"},
+    {l:"CASH",v:`$${portfolio.cash.toFixed(2)}`,c:"#7080a0"},
+    {l:"P&L",v:`${pnl>=0?"+":""}$${pnl.toFixed(2)}`,c:pnl>=0?"#00ff88":"#ff2244"},
+    {l:"RETURN",v:`${pnlPct>=0?"+":""}${pnlPct.toFixed(2)}%`,c:pnl>=0?"#00ff88":"#ff2244"},
+    {l:"OPEN",v:posCount,c:"#a855f7"},
+  ].map(x=>`<div class="card"><div class="card-label">${x.l}</div><div class="card-val" style="color:${x.c}">${x.v}</div></div>`).join("");
+
+  const wrap=document.getElementById("pos-wrap");
+  if (posCount===0){wrap.innerHTML='<div class="empty">No open positions.</div>';return;}
+  wrap.innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>COIN</th><th>ENTRY $</th><th>CURRENT $</th><th>LIVE P&L</th><th>VALUE</th><th>TP1</th><th>TP2</th><th>STOP</th><th>TARGET SRC</th><th>TIME OPEN</th><th>SELL</th></tr></thead>
+    <tbody>${Object.entries(portfolio.positions).map(([id,pos])=>{
+      const coin=COINS.find(c=>c.id===id);
+      const price=coinData[id]?.price||pos.entryPrice;
+      const pnlP=((price-pos.entryPrice)/pos.entryPrice)*100;
+      const ageH=((Date.now()-pos.entryTime)/3600000).toFixed(1);
+      const t=pos.targets;
+      return `<tr>
+        <td style="color:#e0e8f0;font-weight:bold">${coin?.sym||id.slice(0,6)}</td>
+        <td style="color:#7080a0">$${fmtP(pos.entryPrice)}</td>
+        <td style="color:#b0b8c8">$${fmtP(price)}</td>
+        <td style="color:${pnlP>=0?"#00ff88":"#ff4455"};font-weight:bold">${pnlP>=0?"+":""}${pnlP.toFixed(2)}%</td>
+        <td style="color:#e0e8f0">$${(pos.qty*price).toFixed(2)}</td>
+        <td style="color:#f0c040;font-size:9px">${pos.tp1Hit?"✓ HIT":"@+"+t.tp1+"%"}</td>
+        <td style="color:#00ff88;font-size:9px">@+${t.tp2}%</td>
+        <td style="color:#ff4455;font-size:9px">@-${t.stop}%</td>
+        <td style="color:${t.source==="ADAPTIVE"?"#a855f7":"#5a6070"};font-size:9px">${t.source}${t.n>0?" ("+t.n+"T)":""}</td>
+        <td style="color:#3a4550;font-size:9px">${ageH}h</td>
+        <td><button onclick="sellManual('${id}')" style="background:#ff224415;border:1px solid #ff224440;color:#ff2244;padding:3px 8px;border-radius:3px;font-size:9px">SELL</button></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div>`;
+}
+
+// ─── RENDER JOURNAL ───────────────────────────────────────────────────────────
+function renderJournal() {
+  const closed=journal.filter(t=>t.status==="CLOSED");
+  const wins=closed.filter(t=>t.won);
+  const wr=closed.length>0?(wins.length/closed.length)*100:0;
+  document.getElementById("journal-count").textContent=journal.length;
+  document.getElementById("journal-cards").innerHTML=[
+    {l:"TOTAL",v:journal.length,c:"#e0e8f0"},
+    {l:"WIN RATE",v:closed.length>0?`${wr.toFixed(0)}%`:"—",c:wr>=50?"#00ff88":"#ff4455"},
+    {l:"WINS",v:wins.length,c:"#00ff88"},
+    {l:"LOSSES",v:closed.length-wins.length,c:"#ff4455"},
+  ].map(x=>`<div class="card"><div class="card-label">${x.l}</div><div class="card-val" style="color:${x.c}">${x.v}</div></div>`).join("");
+
+  const wrap=document.getElementById("journal-wrap");
+  if (journal.length===0){wrap.innerHTML='<div class="empty">No trades yet.</div>';return;}
+  wrap.innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>COIN</th><th>TYPE</th><th>STATUS</th><th>ENTRY $</th><th>EXIT $</th><th>P&L</th><th>RESULT</th><th>TP1</th><th>TP2</th><th>STOP</th><th>TARGET SRC</th><th>EXIT REASON</th><th>TIME</th></tr></thead>
+    <tbody>${[...journal].reverse().map(t=>`<tr style="background:${t.status==="OPEN"?"#07080e":"transparent"}">
+      <td style="color:#e0e8f0;font-weight:bold">${t.sym}</td>
+      <td style="color:${t.type==="AUTO"?"#a855f7":"#7080a0"};font-size:9px">${t.type==="AUTO"?"⚡ ":""}${t.type}</td>
+      <td style="font-size:9px;color:${t.status==="OPEN"?"#a855f7":t.won?"#00ff88":"#ff4455"}">${t.status}</td>
+      <td style="color:#7080a0">$${fmtP(t.entryPrice)}</td>
+      <td style="color:#7080a0">${t.exitPrice?"$"+fmtP(t.exitPrice):"—"}</td>
+      <td style="color:${(t.pnlPct||0)>=0?"#00ff88":"#ff4455"};font-weight:bold">${(t.pnlPct||0)>=0?"+":""}${(t.pnlPct||0).toFixed(2)}%</td>
+      <td>${t.status==="CLOSED"?`<span style="color:${t.won?"#00ff88":"#ff4455"};border:1px solid ${t.won?"#00ff8844":"#ff224444"};padding:2px 6px;border-radius:3px;font-size:9px">${t.won?"WIN":"LOSS"}</span>`:'<span style="color:#3a4050;font-size:9px">OPEN</span>'}</td>
+      <td style="color:#f0c040;font-size:9px">+${t.targets?.tp1||"—"}%</td>
+      <td style="color:#00ff88;font-size:9px">+${t.targets?.tp2||"—"}%</td>
+      <td style="color:#ff4455;font-size:9px">-${t.targets?.stop||"—"}%</td>
+      <td style="color:${t.targets?.source==="ADAPTIVE"?"#a855f7":"#5a6070"};font-size:9px">${t.targets?.source||"—"}</td>
+      <td style="color:#3a5060;font-size:9px">${t.exitReason||"—"}</td>
+      <td style="color:#2a3040;font-size:9px">${t.timestamp}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+// ─── RENDER LEARNING ──────────────────────────────────────────────────────────
+function renderLearning() {
+  const closed=journal.filter(t=>t.status==="CLOSED");
+  const el=document.getElementById("learning-content");
+  if (closed.length===0){el.innerHTML='<div class="empty">No closed trades yet. Trade and the system learns automatically.</div>';return;}
+
+  const wins=closed.filter(t=>t.won);
+  const wr=(wins.length/closed.length)*100;
+  const totalPnl=closed.reduce((s,t)=>s+(t.pnlPct||0),0);
+  const avgWin=wins.length>0?wins.reduce((s,t)=>s+(t.pnlPct||0),0)/wins.length:0;
+  const avgLoss=closed.filter(t=>!t.won).length>0?Math.abs(closed.filter(t=>!t.won).reduce((s,t)=>s+(t.pnlPct||0),0)/closed.filter(t=>!t.won).length):0;
+
+  // Per signal win rate
+  const sigStats={};
+  closed.forEach(t=>{
+    if(!sigStats[t.signal]) sigStats[t.signal]={wins:0,total:0};
+    sigStats[t.signal].total++;
+    if(t.won) sigStats[t.signal].wins++;
+  });
+
+  el.innerHTML=`
+    <div class="cards">
+      ${[
+        {l:"WIN RATE",v:`${wr.toFixed(0)}%`,c:wr>=50?"#00ff88":"#ff4455"},
+        {l:"TOTAL P&L",v:`${totalPnl>=0?"+":""}${totalPnl.toFixed(1)}%`,c:totalPnl>=0?"#00ff88":"#ff4455"},
+        {l:"AVG WIN",v:`+${avgWin.toFixed(1)}%`,c:"#00ff88"},
+        {l:"AVG LOSS",v:`-${avgLoss.toFixed(1)}%`,c:"#ff4455"},
+        {l:"PROFIT FACTOR",v:avgLoss>0?(avgWin/avgLoss).toFixed(2):"∞",c:"#f0c040"},
+        {l:"CLOSED TRADES",v:closed.length,c:"#7080a0"},
+      ].map(x=>`<div class="card"><div class="card-label">${x.l}</div><div class="card-val" style="color:${x.c}">${x.v}</div></div>`).join("")}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">SIGNAL WIN RATES</div>
+        ${Object.entries(sigStats).map(([sig,s])=>{
+          const swr=(s.wins/s.total)*100;
+          const c=swr>=60?"#00ff88":swr>=45?"#f0c040":"#ff4455";
+          return `<div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px">
+              <span style="color:#7080a0">${sig}</span>
+              <span style="color:${c};font-weight:bold">${swr.toFixed(0)}% (${s.total}T)</span>
+            </div>
+            <div style="height:3px;background:#12192a;border-radius:2px"><div style="width:${swr}%;height:100%;background:${c};border-radius:2px"></div></div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">EXIT REASON BREAKDOWN</div>
+        ${["STOP LOSS","TP1","TP2","TRAILING","TIME STOP","MANUAL"].map(r=>{
+          const m=closed.filter(t=>t.exitReason?.includes(r.split(" ")[0]));
+          if(!m.length) return "";
+          const avg=m.reduce((s,t)=>s+(t.pnlPct||0),0)/m.length;
+          return `<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+            <span style="color:#8090a0;font-size:10px">${r}</span>
+            <div style="display:flex;gap:10px;font-size:9px">
+              <span style="color:#6070a0">${m.length}T</span>
+              <span style="color:${avg>=0?"#00ff88":"#ff4455"};font-weight:bold">${avg>=0?"+":""}${avg.toFixed(1)}% avg</span>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-label" style="margin-bottom:12px">ADAPTIVE TP PROFILES — COIN LEARNING</div>
+      ${Object.keys(coinProfiles).length===0
+        ?'<div style="color:#2a3040;font-size:10px">No profiles yet. Profiles build after each closed trade.</div>'
+        :Object.entries(coinProfiles).map(([sym,p])=>{
+          const cc=p.confidence==="HIGH"?"#00ff88":p.confidence==="MEDIUM"?"#f0c040":"#ff7744";
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0a0d14;border-radius:4px;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+            <div>
+              <span style="color:#e0e8f0;font-weight:bold;font-size:12px">${sym}</span>
+              <span style="color:${cc};font-size:8px;border:1px solid ${cc}44;padding:1px 6px;border-radius:3px;margin-left:8px">${p.confidence} · ${p.trades.length}T</span>
+            </div>
+            <div style="display:flex;gap:14px;font-size:10px;">
+              <div><div style="font-size:8px;color:#2a3040">TP1</div><div style="color:#f0c040;font-weight:bold">+${p.tp1?.toFixed(1)||"—"}%</div></div>
+              <div><div style="font-size:8px;color:#2a3040">TP2</div><div style="color:#00ff88;font-weight:bold">+${p.tp2?.toFixed(1)||"—"}%</div></div>
+              <div><div style="font-size:8px;color:#2a3040">STOP</div><div style="color:#ff4455;font-weight:bold">-${p.stop?.toFixed(1)||"—"}%</div></div>
+              <div><div style="font-size:8px;color:#2a3040">WIN RATE</div><div style="color:${p.winRate>=50?"#00ff88":"#ff4455"};font-weight:bold">${p.winRate?.toFixed(0)||"—"}%</div></div>
+              <div><div style="font-size:8px;color:#2a3040">AVG PEAK</div><div style="color:#a855f7;font-weight:bold">+${p.avgPeak?.toFixed(1)||"—"}%</div></div>
+            </div>
+          </div>`;
+        }).join("")}
+      <div style="font-size:8px;color:#1a2530;margin-top:8px">Profiles update after every closed trade. 5+ trades = ADAPTIVE targets. 10+ = HIGH confidence. Saved across sessions.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:8px">WHAT THE DATA SAYS</div>
+      <div style="font-size:11px;color:#5a7070;line-height:2;">
+        ${wr>=55?`<div style="color:#00ff88">✓ Win rate ${wr.toFixed(0)}% — strategy working. Consider scaling size carefully.</div>`:""}
+        ${wr<40&&closed.length>=5?`<div style="color:#ff4455">⚠ Win rate ${wr.toFixed(0)}% — only trade STRONG BUY signals.</div>`:""}
+        ${closed.length<10?`<div style="color:#4a5060">Need ${10-closed.length} more trades for reliable signal data.</div>`:""}
+        ${avgWin>0&&avgLoss>0&&avgWin/avgLoss>=1.5?`<div style="color:#00ff88">✓ Profit factor ${(avgWin/avgLoss).toFixed(2)} — wins outweigh losses.</div>`:""}
+        <div style="color:#3a4040;font-size:10px;margin-top:4px;">Targets adapt per coin automatically. More trades = more accurate profiles = better exits.</div>
+      </div>
+    </div>`;
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(`panel-${id}`).classList.add("active");
+  const tabs=["scanner","wallets","positions","journal","learning","settings"];
+  document.querySelectorAll(".tab")[tabs.indexOf(id)]?.classList.add("active");
+}
+
+function toggleAuto() {
+  autoMode=!autoMode;
+  const btn=document.getElementById("auto-btn");
+  btn.textContent=autoMode?"⚡ AUTO ON":"⚡ AUTO OFF";
+  btn.style.background=autoMode?"#00ff8820":"#1a2030";
+  btn.style.border=`1px solid ${autoMode?"#00ff88":"#2a3040"}`;
+  btn.style.color=autoMode?"#00ff88":"#555";
+}
+
+function setStatus(msg,color) {
+  const el=document.getElementById("status-dot");
+  el.textContent=`● ${msg}`;
+  el.style.color=color;
+}
+
+function showError(msg) {
+  const el=document.getElementById("error-bar");
+  el.textContent=`⚠ ${msg}`;
+  el.style.display="block";
+}
+function hideError(){document.getElementById("error-bar").style.display="none";}
+
+function updateBadges() {
+  const pnl=portfolio.totalValue-STARTING, pnlPct=(pnl/STARTING)*100;
+  const b=document.getElementById("pnl-badge");
+  b.textContent=`$${portfolio.totalValue.toFixed(0)} (${pnl>=0?"+":""}${pnlPct.toFixed(1)}%)`;
+  b.style.background=pnl>=0?"#00ff8811":"#ff224411";
+  b.style.border=`1px solid ${pnl>=0?"#00ff8833":"#ff224433"}`;
+  b.style.color=pnl>=0?"#00ff88":"#ff2244";
+  document.getElementById("pos-count").textContent=Object.keys(portfolio.positions).length;
+  document.getElementById("journal-count").textContent=journal.length;
+}
+
+function syncSettings() {
+  settings.size=parseFloat(document.getElementById("s-size").value)||100;
+  settings.timeStop=parseFloat(document.getElementById("s-time").value)||48;
+  settings.autoSignal=document.getElementById("s-auto-signal").value;
+  document.getElementById("trade-size").value=settings.size;
+}
+
+function fmtP(p){
+  if(!p&&p!==0)return"—";
+  const a=Math.abs(p);
+  if(a<0.000001)return p.toExponential(2);
+  if(a<0.00001)return p.toFixed(9);
+  if(a<0.0001)return p.toFixed(8);
+  if(a<0.001)return p.toFixed(7);
+  if(a<0.01)return p.toFixed(6);
+  if(a<1)return p.toFixed(5);
+  return p.toFixed(4);
+}
+function fmtN(n){
+  if(!n&&n!==0)return"—";
+  if(n>=1e9)return`$${(n/1e9).toFixed(2)}B`;
+  if(n>=1e6)return`$${(n/1e6).toFixed(2)}M`;
+  if(n>=1e3)return`$${(n/1e3).toFixed(0)}K`;
+  return`$${n.toFixed(0)}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadProfiles();
+fetchAll();
+fetchWalletFeed();
+// Fetch history for top 10 coins staggered
+COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
+setInterval(fetchAll, 60000);          // prices every 60s
+setInterval(fetchWalletFeed, 60000);   // wallets every 60s
+setInterval(checkExits, 10000);        // check stops every 10s
+setInterval(updatePeaks, 5000);        // track peaks every 5s
+</script>
+</body>
+</html>
