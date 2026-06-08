@@ -494,64 +494,49 @@ async function fetchPrices() {
 async function fetchHistory_unused
 
 async function fetchHistory(coinId, delay=0) {
-  await new Promise(r=>setTimeout(r,delay));
-  try {
-    const res = await fetch(`${CG_PROXY}?endpoint=history&ids=${coinId}&days=14&interval=hourly`);
-    if (!res.ok) return;
-    const d = await res.json();
-    if (!coinData[coinId]) coinData[coinId]={history:[]};
-    coinData[coinId].history = d.prices.map(p=>p[1]);
-  } catch(e){}
+  // Disabled - using DEXScreener real-time data instead of CoinGecko history
+  return;
 }
 
-// ─── FETCH SERVER STATE ───────────────────────────────────────────────────────
+// ─── FETCH SERVER STATE ──────────────────────────────────────────────────────
 async function fetchServerState() {
   try {
     const res = await fetch("/api/trading-state");
     if (!res.ok) { console.log("trading-state HTTP error:", res.status); return false; }
     const state = await res.json();
-    console.log("trading-state response:", state.lastRun, "positions:", Object.keys(state.portfolio?.positions||{}).length);
-    if (state.error || !state.lastRun) { console.log("No lastRun in state:", state.error||"missing lastRun"); return false; }
+    if (state.error || !state.lastRun) { console.log("Server state not ready:", state.error||"no lastRun"); return false; }
 
-    // Server is running — use server state
+    console.log("Server state loaded ✓ lastRun:", state.lastRun, "| positions:", Object.keys(state.portfolio?.positions||{}).length, "| lastDex:", Object.keys(state.lastDex||{}).length);
+
     serverMode = true;
     lastServerState = state;
-    portfolio = state.portfolio || portfolio;
-    journal = state.journal || journal;
-    coinProfiles = state.profiles || coinProfiles;
+    portfolio    = state.portfolio || portfolio;
+    journal      = state.journal   || journal;
+    coinProfiles = state.profiles  || coinProfiles;
 
-    // Update coinData from server — try DEX data first (sym), fallback to CoinGecko (id)
+    // Populate coinData — DEX data first (sym), CoinGecko fallback (id)
     const dexData = state.lastDex || {};
     COINS.forEach(c => {
       if (!coinData[c.id]) coinData[c.id] = { history:[] };
-      // Prefer DEX data (real-time) over CoinGecko (hourly)
       if (dexData[c.sym]) {
         const d = dexData[c.sym];
         coinData[c.id].price     = d.price;
-        coinData[c.id].change24h = d.priceChange24h||0;
+        coinData[c.id].change24h = d.priceChange24h || 0;
         coinData[c.id].change7d  = 0;
-        coinData[c.id].volume    = d.volume1h||0;
-        coinData[c.id].mcap      = d.marketCap||0;
-        coinData[c.id].dex       = d; // store full DEX data
-      } else if (state.lastPrices && state.lastPrices[c.id]) {
+        coinData[c.id].volume    = d.volume1h || 0;
+        coinData[c.id].mcap      = d.marketCap || 0;
+        coinData[c.id].dex       = d;
+      } else if (state.lastPrices?.[c.id]) {
         const d = state.lastPrices[c.id];
         coinData[c.id].price     = d.usd;
-        coinData[c.id].change24h = d.usd_24h_change||0;
-        coinData[c.id].change7d  = d.usd_7d_change||0;
-        coinData[c.id].volume    = d.usd_24h_vol||0;
-        coinData[c.id].mcap      = d.usd_market_cap||0;
+        coinData[c.id].change24h = d.usd_24h_change || 0;
+        coinData[c.id].change7d  = d.usd_7d_change  || 0;
+        coinData[c.id].volume    = d.usd_24h_vol     || 0;
+        coinData[c.id].mcap      = d.usd_market_cap  || 0;
       }
     });
 
-    // Also populate indicators from server state
-    if (state.indicators) {
-      Object.entries(state.indicators).forEach(([sym, ind]) => {
-        const coin = COINS.find(c => c.sym === sym);
-        if (coin) indicators[coin.id] = { ...ind, dex: dexData[sym] };
-      });
-    }
-
-    // Update price history from server
+    // Price history from server
     if (state.priceHistory) {
       Object.entries(state.priceHistory).forEach(([id, h]) => {
         if (!coinData[id]) coinData[id] = {};
@@ -559,27 +544,22 @@ async function fetchServerState() {
       });
     }
 
-    // Recalc indicators from server's history
+    // Indicators — from server if available, else recalc
+    if (state.indicators) {
+      Object.entries(state.indicators).forEach(([sym, ind]) => {
+        const coin = COINS.find(c => c.sym === sym);
+        if (coin) indicators[coin.id] = { ...ind, dex: dexData[sym] };
+      });
+    }
+    // Recalc any missing indicators
     COINS.forEach(c => {
-      const ind = calcSignal(c.id);
-      if (ind) indicators[c.id] = ind;
+      if (!indicators[c.id] && coinData[c.id]?.price) {
+        const ind = calcSignal(c.id);
+        if (ind) indicators[c.id] = ind;
+      }
     });
 
-    // Show server mode banner
-    const existing = document.getElementById("server-banner");
-    if (!existing) {
-      const banner = document.createElement("div");
-      banner.id = "server-banner";
-      banner.style.cssText = "background:#0a0a1a;border-bottom:1px solid #a855f733;padding:6px 18px;font-size:9px;color:#a855f7;display:flex;justify-content:space-between;align-items:center;";
-      banner.innerHTML = `<span>⚡ SERVER MODE ACTIVE — trading-engine running 24/7 on Netlify · Last run: ${new Date(state.lastRun).toLocaleTimeString()}</span>
-        <span style="color:#2a3040">${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} total trades · $${state.portfolio?.totalValue?.toFixed(0)||"—"}</span>`;
-      document.getElementById("tabs").insertAdjacentElement("beforebegin", banner);
-    } else {
-      existing.innerHTML = `<span>⚡ SERVER MODE ACTIVE — trading-engine running 24/7 on Netlify · Last run: ${new Date(state.lastRun).toLocaleTimeString()}</span>
-        <span style="color:#2a3040">${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} total trades · $${state.portfolio?.totalValue?.toFixed(0)||"—"}</span>`;
-    }
-
-    // Update Fear & Greed badge
+    // Update badges and banners
     if (state.fearGreed != null) {
       const fg = state.fearGreed;
       const fgEl = document.getElementById("fg-badge");
@@ -592,42 +572,43 @@ async function fetchServerState() {
         fgEl.style.background = `${fgColor}11`;
       }
     }
-
-    // Update BTC badge
     if (state.btcData) {
-      const btc = state.btcData;
       const btcEl = document.getElementById("btc-badge");
       if (btcEl) {
-        const c = btc.change1h >= 1 ? "#00ff88" : btc.change1h <= -1 ? "#ff4455" : "#f0c040";
-        btcEl.textContent = `BTC ${btc.change1h >= 0 ? "+" : ""}${btc.change1h?.toFixed(1)}% 1h`;
+        const c = state.btcData.change1h >= 1 ? "#00ff88" : state.btcData.change1h <= -1 ? "#ff4455" : "#f0c040";
+        btcEl.textContent = `BTC ${state.btcData.change1h>=0?"+":""}${(state.btcData.change1h||0).toFixed(1)}% 1h`;
         btcEl.style.color = c;
         btcEl.style.border = `1px solid ${c}44`;
         btcEl.style.background = `${c}11`;
       }
     }
-
-    // Update market badge
     if (state.marketData) {
-      const mkt = state.marketData;
       const mktEl = document.getElementById("market-badge");
       if (mktEl) {
-        const c = mkt.mcapChange >= 1 ? "#00ff88" : mkt.mcapChange <= -1 ? "#ff4455" : "#f0c040";
-        mktEl.textContent = `MKT ${mkt.mcapChange >= 0 ? "+" : ""}${mkt.mcapChange?.toFixed(1)}% · BTC DOM ${mkt.btcDominance?.toFixed(0)}%`;
+        const c = state.marketData.mcapChange >= 1 ? "#00ff88" : state.marketData.mcapChange <= -1 ? "#ff4455" : "#f0c040";
+        mktEl.textContent = `MKT ${state.marketData.mcapChange>=0?"+":""}${(state.marketData.mcapChange||0).toFixed(1)}% · DOM ${(state.marketData.btcDominance||0).toFixed(0)}%`;
         mktEl.style.color = c;
         mktEl.style.border = `1px solid ${c}44`;
         mktEl.style.background = `${c}11`;
       }
     }
 
-    // Pull indicators from server state
-    if (state.indicators) {
-      Object.entries(state.indicators).forEach(([id, ind]) => {
-        indicators[id] = ind;
-      });
+    // Server mode banner
+    const existing = document.getElementById("server-banner");
+    const bannerHTML = `<span>⚡ SERVER MODE ACTIVE · Last run: ${new Date(state.lastRun).toLocaleTimeString()} · ${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} trades</span>`;
+    if (!existing) {
+      const banner = document.createElement("div");
+      banner.id = "server-banner";
+      banner.style.cssText = "background:#0a0a1a;border-bottom:1px solid #a855f733;padding:6px 18px;font-size:9px;color:#a855f7;display:flex;justify-content:space-between;align-items:center;";
+      banner.innerHTML = bannerHTML;
+      document.getElementById("tabs").insertAdjacentElement("beforebegin", banner);
+    } else {
+      existing.innerHTML = bannerHTML;
     }
 
-    // Render everything now that data is loaded
+    // Render everything
     document.getElementById("scanner-loading").style.display = "none";
+    setStatus(`SERVER · ${Object.keys(dexData).length||Object.keys(state.lastPrices||{}).length} coins`, "#a855f7");
     renderScanner();
     renderPositions();
     renderJournal();
@@ -635,6 +616,7 @@ async function fetchServerState() {
     updateBadges();
     return true;
   } catch(e) {
+    console.log("fetchServerState error:", e.message);
     return false;
   }
 }
@@ -643,7 +625,7 @@ async function postTrade(action, coinId, price, sym, signal, score, targets) {
   try {
     await fetch("/api/trading-state", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type":"application/json" },
       body: JSON.stringify({ action, coinId, price, sym, signal, score, targets }),
     });
     await fetchServerState();
@@ -857,16 +839,15 @@ function renderScanner() {
   const body = document.getElementById("scanner-body");
 
   body.innerHTML = display.map(coin=>{
-    const d = coinData[coin.id]||{};
-    const dex = d.dex || ind.dex || {};
+    const d   = coinData[coin.id]||{};
     const ind = indicators[coin.id]||{};
-    // Use DEX data for real-time fields if available
-    const p5m = dex.priceChange5m ?? d.change5m ?? 0;
-    const p1h = dex.priceChange1h ?? d.change1h ?? 0;
-    const buys5m = dex.buys5m || 0;
+    const dex = d.dex || ind.dex || {};
+    const p5m   = dex.priceChange5m  || 0;
+    const p1h   = dex.priceChange1h  || d.change24h || 0;
+    const buys5m  = dex.buys5m  || 0;
     const sells5m = dex.sells5m || 0;
-    const vol5m = dex.volume5m || 0;
-    const bsr = sells5m > 0 ? buys5m/sells5m : buys5m > 0 ? 5 : null;
+    const vol5m   = dex.volume5m || 0;
+    const bsr = sells5m > 0 ? (buys5m/sells5m) : null;
     const hasPos = !!portfolio.positions[coin.id];
     const pos = portfolio.positions[coin.id];
     const t = getTargets(coin.sym);
