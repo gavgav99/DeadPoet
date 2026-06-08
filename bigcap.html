@@ -46,6 +46,9 @@ tr.has-pos{background:#070d0a;}
     <button onclick="fetchAll()" style="background:#1a2030;border:1px solid #2a3040;color:#5a6070;padding:4px 10px;border-radius:4px;font-size:9px;">↺ REFRESH</button>
     <button id="auto-btn" onclick="toggleAuto()" style="padding:5px 12px;border-radius:4px;font-size:10px;background:#1a2030;border:1px solid #2a3040;color:#555;">⚡ AUTO OFF</button>
     <div id="pnl-badge" style="padding:5px 10px;border-radius:4px;font-size:11px;background:#00ff8811;border:1px solid #00ff8833;color:#00ff88;">$10,000 (0.0%)</div>
+    <div id="fg-badge" style="padding:5px 10px;border-radius:4px;font-size:10px;background:#1a2030;border:1px solid #2a3040;color:#555;">F&G: —</div>
+    <div id="btc-badge" style="padding:5px 10px;border-radius:4px;font-size:10px;background:#1a2030;border:1px solid #2a3040;color:#555;">BTC: —</div>
+    <div id="market-badge" style="padding:5px 10px;border-radius:4px;font-size:10px;background:#1a2030;border:1px solid #2a3040;color:#555;">MKT: —</div>
   </div>
 </div>
 
@@ -56,6 +59,7 @@ tr.has-pos{background:#070d0a;}
   <button class="tab" onclick="showTab('positions')">POSITIONS (<span id="pos-count">0</span>)</button>
   <button class="tab" onclick="showTab('journal')">JOURNAL (<span id="journal-count">0</span>)</button>
   <button class="tab" onclick="showTab('learning')">LEARNING ✦</button>
+  <button class="tab" onclick="showTab('analytics')">ANALYTICS ✦</button>
   <button class="tab" onclick="showTab('settings')">SETTINGS</button>
 </div>
 
@@ -86,6 +90,7 @@ tr.has-pos{background:#070d0a;}
       <thead><tr>
         <th>COIN</th><th>PRICE</th><th>24H%</th><th>7D%</th>
         <th>VOLUME</th><th>MCAP</th><th>RSI</th><th>MACD</th><th>BB%</th>
+        <th>OB</th><th>RS</th><th>FLOW</th><th>F&G</th>
         <th>SIGNAL</th><th>SCORE</th><th>TP1</th><th>TP2</th><th>STOP</th><th>TRADE</th>
       </tr></thead>
       <tbody id="scanner-body"></tbody>
@@ -136,6 +141,20 @@ tr.has-pos{background:#070d0a;}
 <!-- LEARNING -->
 <div id="panel-learning" class="panel">
   <div id="learning-content"><div class="empty">No closed trades yet. Trade and the system learns.</div></div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="panel-analytics" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:14px;color:#e0e8f0;font-weight:bold;">Trade Analytics</div>
+      <div style="font-size:9px;color:#2a3540;">Complete historical breakdown — what works, when, and why</div>
+    </div>
+    <button onclick="loadAnalytics()" style="background:#1a2030;border:1px solid #2a3040;color:#5a6070;padding:6px 14px;border-radius:4px;font-size:10px;cursor:pointer;">↺ REFRESH</button>
+  </div>
+  <div id="analytics-content">
+    <div class="empty" style="color:#2a3040">Loading analytics...</div>
+  </div>
 </div>
 
 <!-- SETTINGS -->
@@ -540,6 +559,53 @@ async function fetchServerState() {
         <span style="color:#2a3040">${Object.keys(state.portfolio?.positions||{}).length} open · ${state.journal?.length||0} total trades · $${state.portfolio?.totalValue?.toFixed(0)||"—"}</span>`;
     }
 
+    // Update Fear & Greed badge
+    if (state.fearGreed != null) {
+      const fg = state.fearGreed;
+      const fgEl = document.getElementById("fg-badge");
+      if (fgEl) {
+        const fgLabel = fg<=15?"EXTREME FEAR":fg<=30?"FEAR":fg<=45?"MILD FEAR":fg<=55?"NEUTRAL":fg<=70?"MILD GREED":fg<=85?"GREED":"EXTREME GREED";
+        const fgColor = fg<=30?"#00ff88":fg<=45?"#88ffbb":fg<=55?"#f0c040":fg<=70?"#ffaa55":fg<=85?"#ff7744":"#ff2244";
+        fgEl.textContent = `F&G: ${fg} ${fgLabel}`;
+        fgEl.style.color = fgColor;
+        fgEl.style.border = `1px solid ${fgColor}44`;
+        fgEl.style.background = `${fgColor}11`;
+      }
+    }
+
+    // Update BTC badge
+    if (state.btcData) {
+      const btc = state.btcData;
+      const btcEl = document.getElementById("btc-badge");
+      if (btcEl) {
+        const c = btc.change1h >= 1 ? "#00ff88" : btc.change1h <= -1 ? "#ff4455" : "#f0c040";
+        btcEl.textContent = `BTC ${btc.change1h >= 0 ? "+" : ""}${btc.change1h?.toFixed(1)}% 1h`;
+        btcEl.style.color = c;
+        btcEl.style.border = `1px solid ${c}44`;
+        btcEl.style.background = `${c}11`;
+      }
+    }
+
+    // Update market badge
+    if (state.marketData) {
+      const mkt = state.marketData;
+      const mktEl = document.getElementById("market-badge");
+      if (mktEl) {
+        const c = mkt.mcapChange >= 1 ? "#00ff88" : mkt.mcapChange <= -1 ? "#ff4455" : "#f0c040";
+        mktEl.textContent = `MKT ${mkt.mcapChange >= 0 ? "+" : ""}${mkt.mcapChange?.toFixed(1)}% · BTC DOM ${mkt.btcDominance?.toFixed(0)}%`;
+        mktEl.style.color = c;
+        mktEl.style.border = `1px solid ${c}44`;
+        mktEl.style.background = `${c}11`;
+      }
+    }
+
+    // Pull indicators from server state
+    if (state.indicators) {
+      Object.entries(state.indicators).forEach(([id, ind]) => {
+        indicators[id] = ind;
+      });
+    }
+
     renderScanner(); renderPositions(); renderJournal(); renderLearning(); updateBadges();
     return true;
   } catch(e) {
@@ -794,6 +860,10 @@ function renderScanner() {
       <td style="color:${d.rsi_color||"#888"}">${ind.rsi!=null?ind.rsi.toFixed(0):"—"}</td>
       <td style="color:${ind.macd?.bullish?"#00ff88":"#ff4455"}">${ind.macd?(ind.macd.bullish?"▲":"▼"):"—"}</td>
       <td style="color:${ind.bbPct!=null?(ind.bbPct<25?"#00ff88":ind.bbPct>75?"#ff4455":"#888"):"#555"}">${ind.bbPct!=null?ind.bbPct.toFixed(0)+"%":"—"}</td>
+      <td style="color:${(()=>{const r=ind.dex?.buys5m/(ind.dex?.sells5m||1);return !r?"#555":r>=1.5?"#00ff88":r<=0.7?"#ff4455":"#f0c040"})()};font-size:9px">${ind.dex?(ind.dex.buys5m/(ind.dex.sells5m||1)).toFixed(1)+"x":"—"}</td>
+      <td style="color:${(()=>{const rs=ind.rs;return !rs?"#555":rs.percentile>=80?"#00ff88":rs.percentile>=60?"#88ddbb":rs.percentile<=20?"#ff4455":"#555"})()};font-size:9px">${ind.rs?`#${ind.rs.rank}`:"—"}</td>
+      <td style="color:${(()=>{const f=ind.flow;return !f?"#555":f.signal==="ACCUMULATION"?"#00ff88":f.signal==="MILD_ACCUM"?"#88ddbb":f.signal==="DISTRIBUTION"?"#ff4455":f.signal==="MILD_DIST"?"#ff8844":"#555"})()};font-size:9px">${ind.flow&&ind.flow.signal!=="NEUTRAL"?ind.flow.signal.replace("_"," ").slice(0,6):"—"}</td>
+      <td style="color:${(()=>{const fg=ind.fearGreed||lastServerState?.fearGreed;return fg==null?"#555":fg<=30?"#00ff88":fg<=55?"#f0c040":fg<=75?"#ffaa55":"#ff4455"})()};font-size:9px">${ind.fearGreed||lastServerState?.fearGreed||"—"}</td>
       <td><span style="color:${sc};border:1px solid ${sc}33;padding:2px 6px;border-radius:3px;font-size:9px;white-space:nowrap">${ind.signal||"—"}</span></td>
       <td><div style="display:flex;align-items:center;gap:4px"><div style="width:30px;height:3px;background:#12192a;border-radius:2px"><div style="width:${ind.score||0}%;height:100%;background:${sc};border-radius:2px"></div></div><span style="color:${sc};font-size:10px">${ind.score||"—"}</span></div></td>
       <td style="color:#f0c040;font-size:9px">+${t.tp1}%<br><span style="color:#2a3540;font-size:8px">${t.source}</span></td>
@@ -1079,6 +1149,95 @@ function renderLearning() {
       <div style="font-size:8px;color:#1a2530;margin-top:8px">Profiles update after every closed trade. 5+ trades = ADAPTIVE targets. 10+ = HIGH confidence. Saved across sessions.</div>
     </div>
 
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-label" style="margin-bottom:12px">FEAR & GREED ENTRY ANALYSIS</div>
+      ${(()=>{
+        const fgTrades = closed.filter(t=>t.fearGreedAtEntry!=null);
+        if (fgTrades.length < 3) return '<div style="color:#2a3040;font-size:10px">Need 3+ trades with Fear & Greed data to analyze.</div>';
+        const zones = [
+          {label:"Extreme Fear (0-25)",   min:0,  max:25},
+          {label:"Fear (26-45)",           min:26, max:45},
+          {label:"Neutral (46-55)",        min:46, max:55},
+          {label:"Greed (56-75)",          min:56, max:75},
+          {label:"Extreme Greed (76-100)", min:76, max:100},
+        ];
+        return zones.map(z=>{
+          const zt = fgTrades.filter(t=>t.fearGreedAtEntry>=z.min&&t.fearGreedAtEntry<=z.max);
+          if (!zt.length) return "";
+          const zwr = (zt.filter(t=>t.won).length/zt.length)*100;
+          const zavg = zt.reduce((s,t)=>s+(t.pnlPct||0),0)/zt.length;
+          const zc = zwr>=60?"#00ff88":zwr>=45?"#f0c040":"#ff4455";
+          return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+            <span style="color:#7080a0;font-size:10px">\${z.label}</span>
+            <div style="display:flex;gap:12px;font-size:9px">
+              <span style="color:#5a6070">\${zt.length}T</span>
+              <span style="color:\${zc};font-weight:bold">\${zwr.toFixed(0)}% WR</span>
+              <span style="color:\${zavg>=0?"#00ff88":"#ff4455"}">\${zavg>=0?"+":""}\${zavg.toFixed(1)}% avg</span>
+            </div>
+          </div>\`;
+        }).join("");
+      })()}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">EXCHANGE FLOW ACCURACY — IS IT WORKING?</div>
+        ${(()=>{
+          const allFlowStats = {};
+          Object.values(coinProfiles).forEach(p => {
+            if (!p.flowAccuracy) return;
+            Object.entries(p.flowAccuracy).forEach(([sig, stats]) => {
+              if (!allFlowStats[sig]) allFlowStats[sig] = { wins:0, total:0 };
+              allFlowStats[sig].wins += stats.wins;
+              allFlowStats[sig].total += stats.total;
+            });
+          });
+          const entries = Object.entries(allFlowStats);
+          if (entries.length === 0) return '<div style="color:#2a3040;font-size:10px">No flow data yet. Needs Etherscan API key + closed trades.</div>';
+          return entries.map(([sig, s]) => {
+            const wr = s.total > 0 ? (s.wins/s.total)*100 : 0;
+            const c = wr >= 60 ? "#00ff88" : wr >= 45 ? "#f0c040" : "#ff4455";
+            return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+              <span style="color:#7080a0;font-size:10px">\${sig.replace("_"," ")}</span>
+              <div style="display:flex;gap:10px;font-size:9px">
+                <span style="color:#5a6070">\${s.total}T</span>
+                <span style="color:\${c};font-weight:bold">\${wr.toFixed(0)}% accurate</span>
+              </div>
+            </div>\`;
+          }).join('');
+        })()}
+        <div style="font-size:8px;color:#1a2530;margin-top:8px">If ACCUMULATION accuracy stays above 60% over 20+ trades — increase its weight. Below 50% — reduce it.</div>
+      </div>
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px">RELATIVE STRENGTH ACCURACY</div>
+        ${(()=>{
+          const allRsStats = {};
+          Object.values(coinProfiles).forEach(p => {
+            if (!p.rsAccuracy) return;
+            Object.entries(p.rsAccuracy).forEach(([sig, stats]) => {
+              if (!allRsStats[sig]) allRsStats[sig] = { wins:0, total:0 };
+              allRsStats[sig].wins += stats.wins;
+              allRsStats[sig].total += stats.total;
+            });
+          });
+          const entries = Object.entries(allRsStats);
+          if (entries.length === 0) return '<div style="color:#2a3040;font-size:10px">No RS data yet. Builds as trades close.</div>';
+          return entries.map(([sig, s]) => {
+            const wr = s.total > 0 ? (s.wins/s.total)*100 : 0;
+            const c = wr >= 60 ? "#00ff88" : wr >= 45 ? "#f0c040" : "#ff4455";
+            return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+              <span style="color:#7080a0;font-size:10px">\${sig.replace("RS_","")}</span>
+              <div style="display:flex;gap:10px;font-size:9px">
+                <span style="color:#5a6070">\${s.total}T</span>
+                <span style="color:\${c};font-weight:bold">\${wr.toFixed(0)}% accurate</span>
+              </div>
+            </div>\`;
+          }).join('');
+        })()}
+        <div style="font-size:8px;color:#1a2530;margin-top:8px">RS_STRONG above 65% = strong predictor. Adjust weighting after 20+ trades.</div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-label" style="margin-bottom:8px">WHAT THE DATA SAYS</div>
       <div style="font-size:11px;color:#5a7070;line-height:2;">
@@ -1096,8 +1255,9 @@ function showTab(id) {
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.getElementById(`panel-${id}`).classList.add("active");
-  const tabs=["scanner","wallets","positions","journal","learning","settings"];
+  const tabs=["scanner","wallets","positions","journal","learning","analytics","settings"];
   document.querySelectorAll(".tab")[tabs.indexOf(id)]?.classList.add("active");
+  if (id==="analytics") loadAnalytics();
 }
 
 function toggleAuto() {
@@ -1132,6 +1292,222 @@ function updateBadges() {
   b.style.color=pnl>=0?"#00ff88":"#ff2244";
   document.getElementById("pos-count").textContent=Object.keys(portfolio.positions).length;
   document.getElementById("journal-count").textContent=journal.length;
+}
+
+// ─── ANALYTICS ────────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const el = document.getElementById("analytics-content");
+  el.innerHTML = '<div class="empty" style="color:#2a3040">Loading...</div>';
+
+  try {
+    const [summaryRes, breakdownRes] = await Promise.all([
+      fetch("/api/analytics?type=summary"),
+      fetch("/api/analytics?type=breakdown"),
+    ]);
+
+    const summary   = summaryRes.ok   ? await summaryRes.json()   : null;
+    const breakdown = breakdownRes.ok ? await breakdownRes.json() : null;
+
+    if (!summary && !breakdown) {
+      el.innerHTML = '<div class="empty">No analytics data yet. Trades post automatically after closing.</div>';
+      return;
+    }
+
+    const acc = summary?.accuracy || {};
+    const bd  = breakdown?.breakdown || {};
+    const overall = bd.overall || acc.overall;
+
+    const statCard = (label, val, sub, color="#e0e8f0") =>
+      `<div class="card"><div class="card-label">${label}</div><div class="card-val" style="color:${color}">${val}</div>${sub?`<div style="font-size:9px;color:#2a3040;margin-top:3px">${sub}</div>`:""}</div>`;
+
+    const wr = overall?.winRate || 0;
+    const pf = overall?.profitFactor || 0;
+
+    // Overall stats
+    const overallHTML = `
+      <div class="cards" style="margin-bottom:20px;">
+        ${statCard("TOTAL TRADES", overall?.total||0)}
+        ${statCard("WIN RATE", overall?.winRate!=null?`${wr.toFixed(1)}%`:"—", null, wr>=55?"#00ff88":"#ff4455")}
+        ${statCard("PROFIT FACTOR", pf>0?pf.toFixed(2):"—", "wins/losses ratio", pf>=1.5?"#00ff88":pf>=1?"#f0c040":"#ff4455")}
+        ${statCard("AVG WIN", overall?.avgWin!=null?`+${overall.avgWin.toFixed(1)}%`:"—", null, "#00ff88")}
+        ${statCard("AVG LOSS", overall?.avgLoss!=null?`-${overall.avgLoss.toFixed(1)}%`:"—", null, "#ff4455")}
+        ${statCard("AVG HOLD", overall?.avgHold!=null?`${overall.avgHold.toFixed(1)}h`:"—")}
+      </div>`;
+
+    // Breakdown table helper
+    const breakdownTable = (title, data, note) => {
+      if (!data || data.length === 0) return "";
+      return `<div class="card" style="margin-bottom:14px;">
+        <div style="font-size:9px;color:#2a3040;letter-spacing:1px;margin-bottom:12px">${title}</div>
+        ${note?`<div style="font-size:8px;color:#1a2530;margin-bottom:8px">${note}</div>`:""}
+        ${data.map(d => {
+          const c = d.winRate>=60?"#00ff88":d.winRate>=45?"#f0c040":"#ff4455";
+          const barW = Math.min(100, d.winRate);
+          return `<div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;">
+              <span style="color:#8090a0">${d.label}</span>
+              <div style="display:flex;gap:12px;">
+                <span style="color:#3a4550;font-size:9px">${d.total}T</span>
+                <span style="color:${d.avgPnl>=0?"#00ff88":"#ff4455"};font-size:9px">${d.avgPnl>=0?"+":""}${d.avgPnl.toFixed(1)}% avg</span>
+                <span style="color:${c};font-weight:bold">${d.winRate.toFixed(0)}%</span>
+              </div>
+            </div>
+            <div style="height:3px;background:#12192a;border-radius:2px">
+              <div style="width:${barW}%;height:100%;background:${c};border-radius:2px"></div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>`;
+    };
+
+    // Signal accuracy from running stats
+    const signalStats = () => {
+      const dims = [
+        { key:"fg", title:"BY FEAR & GREED ZONE", note:"Does buying in fear actually work?" },
+        { key:"btc", title:"BY BTC DIRECTION", note:"How much does BTC condition matter?" },
+        { key:"score", title:"BY ENTRY SCORE RANGE", note:"Are higher scores actually better?" },
+        { key:"rs", title:"BY RELATIVE STRENGTH RANK", note:"Does RS ranking predict performance?" },
+        { key:"volspike", title:"BY VOLUME SPIKE", note:"Does unusual volume predict momentum?" },
+        { key:"bsr", title:"BY BUY/SELL RATIO", note:"How much does order pressure matter?" },
+        { key:"exit", title:"BY EXIT REASON", note:"Which exits are most profitable?" },
+        { key:"flow", title:"EXCHANGE FLOW ACCURACY", note:"Is the flow signal actually predictive?" },
+      ];
+
+      return dims.map(dim => {
+        const data = Object.entries(acc)
+          .filter(([k]) => k.startsWith(dim.key+":"))
+          .map(([k,v]) => ({
+            label: k.replace(dim.key+":", ""),
+            winRate: v.winRate || 0,
+            total: v.total || 0,
+            avgPnl: v.avgPnl || 0,
+          }))
+          .filter(d => d.total >= 2)
+          .sort((a,b) => b.winRate - a.winRate);
+
+        return breakdownTable(dim.title, data, dim.note);
+      }).join("");
+    };
+
+    // Coin breakdown
+    const coinHTML = bd.byCoin ? breakdownTable(
+      "BY COIN — which coins are most profitable",
+      bd.byCoin,
+      "Focus on coins with 60%+ win rate and 10+ trades"
+    ) : "";
+
+    // Hour of day breakdown
+    const hourHTML = bd.byHour ? breakdownTable(
+      "BY HOUR (UTC) — best time to trade",
+      [...(bd.byHour||[])].sort((a,b)=>parseInt(a.label)-parseInt(b.label)).map(d=>({...d,label:`${d.label}:00 UTC`})),
+      "Memecoins often spike during US market hours (13-21 UTC)"
+    ) : "";
+
+    // Day of week
+    const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const dowHTML = bd.byDow ? breakdownTable(
+      "BY DAY OF WEEK",
+      [...(bd.byDow||[])].map(d=>({...d,label:days[parseInt(d.label)]||d.label})),
+      "Some days consistently outperform — let data decide"
+    ) : "";
+
+    // Recent trades table
+    const recentTrades = summary?.recentTrades || [];
+    const recentHTML = recentTrades.length > 0 ? `
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-size:9px;color:#2a3040;letter-spacing:1px;margin-bottom:12px">RECENT CLOSED TRADES — FULL SNAPSHOT</div>
+        <div style="overflow-x:auto;">
+          <table style="font-size:10px;">
+            <thead><tr style="color:#2a3040;border-bottom:1px solid #0f1820;">
+              <th style="padding:5px 8px;font-weight:normal">TIME</th>
+              <th style="padding:5px 8px;font-weight:normal">COIN</th>
+              <th style="padding:5px 8px;font-weight:normal">P&L</th>
+              <th style="padding:5px 8px;font-weight:normal">SCORE</th>
+              <th style="padding:5px 8px;font-weight:normal">F&G</th>
+              <th style="padding:5px 8px;font-weight:normal">BTC 1H</th>
+              <th style="padding:5px 8px;font-weight:normal">5M%</th>
+              <th style="padding:5px 8px;font-weight:normal">BSR</th>
+              <th style="padding:5px 8px;font-weight:normal">RS</th>
+              <th style="padding:5px 8px;font-weight:normal">FLOW</th>
+              <th style="padding:5px 8px;font-weight:normal">HELD</th>
+              <th style="padding:5px 8px;font-weight:normal">EXIT</th>
+            </tr></thead>
+            <tbody>
+              ${recentTrades.slice(0,50).map(t => {
+                const s = t.snapshot || {};
+                const c = t.won ? "#00ff88" : "#ff4455";
+                return `<tr style="border-bottom:1px solid #090d12;">
+                  <td style="padding:5px 8px;color:#3a4550;font-size:9px;white-space:nowrap">${(t.closeTime||"").slice(5,16)}</td>
+                  <td style="padding:5px 8px;color:#e0e8f0;font-weight:bold">${t.sym}</td>
+                  <td style="padding:5px 8px;color:${c};font-weight:bold">${t.pnlPct>=0?"+":""}${(t.pnlPct||0).toFixed(1)}%</td>
+                  <td style="padding:5px 8px;color:${c}">${s.score||"—"}</td>
+                  <td style="padding:5px 8px;color:${s.fearGreed<=30?"#00ff88":s.fearGreed<=55?"#f0c040":"#ff4455"};font-size:9px">${s.fearGreed||"—"}</td>
+                  <td style="padding:5px 8px;color:${(s.btcChange1h||0)>=0?"#00ff88":"#ff4455"};font-size:9px">${s.btcChange1h!=null?(s.btcChange1h>=0?"+":"")+s.btcChange1h.toFixed(1)+"%":"—"}</td>
+                  <td style="padding:5px 8px;color:${(s.priceChange5m||0)>=0?"#00ff88":"#ff4455"};font-size:9px">${s.priceChange5m!=null?s.priceChange5m.toFixed(1)+"%":"—"}</td>
+                  <td style="padding:5px 8px;color:#7080a0;font-size:9px">${s.buySellRatio!=null?s.buySellRatio.toFixed(1)+"x":"—"}</td>
+                  <td style="padding:5px 8px;color:#7080a0;font-size:9px">${s.rsRank!=null?"#"+s.rsRank:"—"}</td>
+                  <td style="padding:5px 8px;color:${s.flowSignal?.includes("ACCUM")?"#00ff88":s.flowSignal?.includes("DIST")?"#ff4455":"#555"};font-size:9px">${s.flowSignal?.slice(0,6)||"—"}</td>
+                  <td style="padding:5px 8px;color:#3a4550;font-size:9px">${t.hoursHeld||"—"}h</td>
+                  <td style="padding:5px 8px;color:#5a6070;font-size:9px;white-space:nowrap">${(t.exitReason||"—").slice(0,12)}</td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>` : "";
+
+    // Insight generator
+    const insights = () => {
+      const ins = [];
+      if (!acc.overall || acc.overall.total < 10) {
+        ins.push({ c:"#2a3040", text:`Need ${10-(acc.overall?.total||0)} more closed trades for reliable analytics.` });
+        return ins;
+      }
+
+      const wr = acc.overall.winRate;
+      if (wr >= 60) ins.push({ c:"#00ff88", text:`✓ ${wr.toFixed(0)}% win rate — strategy is working. Consider scaling size.` });
+      else if (wr < 45) ins.push({ c:"#ff4455", text:`⚠ ${wr.toFixed(0)}% win rate — below break-even. Review signal thresholds.` });
+
+      // Best performing F&G zone
+      const fgData = Object.entries(acc).filter(([k])=>k.startsWith("fg:")).map(([k,v])=>({zone:k.replace("fg:",""),...v}));
+      const bestFG = fgData.sort((a,b)=>(b.winRate||0)-(a.winRate||0))[0];
+      if (bestFG && bestFG.total>=3) ins.push({ c:"#f0c040", text:`Best entries in ${bestFG.zone.replace("_"," ")} zone (${bestFG.winRate?.toFixed(0)}% WR, ${bestFG.total}T).` });
+
+      // BTC filter effectiveness
+      const btcUp = acc["btc:BTC_STRONG_UP"];
+      const btcDown = acc["btc:BTC_STRONG_DOWN"];
+      if (btcUp?.total>=3 && btcDown?.total>=3) {
+        ins.push({ c:"#a855f7", text:`BTC up: ${btcUp.winRate?.toFixed(0)}% WR vs BTC down: ${btcDown.winRate?.toFixed(0)}% WR — ${btcUp.winRate>btcDown.winRate?"BTC filter confirmed":"BTC direction less important than expected"}.` });
+      }
+
+      // Flow signal value
+      const flowAccum = acc["flow:ACCUMULATION"];
+      if (flowAccum?.total >= 5) {
+        ins.push({ c: flowAccum.winRate>=60?"#00ff88":"#ff4455",
+          text: `Exchange flow ACCUMULATION signal: ${flowAccum.winRate?.toFixed(0)}% accurate over ${flowAccum.total} trades — ${flowAccum.winRate>=60?"USEFUL signal, consider increasing weight":"Not reliable yet, keep as small confirmation only"}.` });
+      }
+
+      // Volume spike value
+      const volSpike = acc["volspike:SPIKE_3X"];
+      if (volSpike?.total >= 5) {
+        ins.push({ c: volSpike.winRate>=60?"#00ff88":"#f0c040",
+          text: `3x volume spike: ${volSpike.winRate?.toFixed(0)}% WR over ${volSpike.total}T — ${volSpike.winRate>=60?"Strong predictor":"Moderate signal"}.` });
+      }
+
+      return ins;
+    };
+
+    const insightHTML = `
+      <div class="card" style="margin-bottom:14px;">
+        <div style="font-size:9px;color:#2a3040;letter-spacing:1px;margin-bottom:10px">WHAT THE DATA IS TELLING YOU</div>
+        ${insights().map(i=>`<div style="font-size:11px;color:${i.c};margin-bottom:8px;line-height:1.6">${i.text}</div>`).join("")}
+      </div>`;
+
+    el.innerHTML = overallHTML + insightHTML + coinHTML + signalStats() + hourHTML + dowHTML + recentHTML;
+
+  } catch(e) {
+    el.innerHTML = `<div class="empty">Analytics error: ${e.message}</div>`;
+  }
 }
 
 function syncSettings() {
