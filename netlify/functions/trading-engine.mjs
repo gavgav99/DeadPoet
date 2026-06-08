@@ -863,6 +863,12 @@ export default async (request, context) => {
         buySellRatio:(dex.buys5m/(dex.sells5m||1)).toFixed(2),
       });
 
+      // Post to analytics
+      postToAnalytics("TRADE_OPEN", {
+        id: jid, sym: coin.sym,
+        snapshot: buildEntrySnapshot(coin, dex.price, ind, fearGreed, macro, dex, size),
+      });
+
       log.push(`BUY $${size}: ${coin.sym} score=${ind.score} 5m=${dex.priceChange5m?.toFixed(1)}% BSR=${(dex.buys5m/(dex.sells5m||1)).toFixed(1)}x F&G=${fearGreed}`);
     }
 
