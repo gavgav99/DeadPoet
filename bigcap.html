@@ -262,7 +262,7 @@ const WALLETS = [
   { address:"9yYya3F5EJoLnBNKW6z4YoWFrLnvqFJNpZumLGmBaGjx", name:"loop",     tier:"A" },
 ];
 
-const PROXY  = "https://deadpoet.xyz/.netlify/functions/dexscreener";
+const PROXY  = "https://deadpoet.xyz/.netlify/functions/marketdata";
 const CIELO  = "https://deadpoet.xyz/.netlify/functions/cielo";
 const CG_PROXY = "https://deadpoet.xyz/.netlify/functions/coingecko";
 const CG     = "https://api.coingecko.com/api/v3";
@@ -459,37 +459,39 @@ function calcSignal(id) {
 
 // ─── FETCH COINGECKO ──────────────────────────────────────────────────────────
 async function fetchPrices() {
-  const ids = COINS.map(c=>c.id).join(",");
-  const params = `ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_24hr_vol=true&include_market_cap=true`;
-  
-  // Try CoinGecko directly first, then fallback through CORS proxy
-  const urls = [
-    `${CG_PROXY}?endpoint=price&ids=${ids}`,
-    `${CG}/simple/price?${params}`,
-    `https://corsproxy.io/?${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?${params}`)}`,
-  ];
+  // Use DEXScreener via Dead Poet proxy — no rate limits, real 5m data
+  try {
+    const res = await fetch(`${PROXY}?endpoint=bulk`);
+    if (!res.ok) throw new Error(`marketdata ${res.status}`);
+    const dexData = await res.json();
 
-  let data = null;
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { headers: { "Accept": "application/json" } });
-      if (res.ok) { data = await res.json(); break; }
-    } catch(e) { continue; }
+    // Map DEX data into coinData by sym -> id
+    COINS.forEach(c => {
+      if (dexData[c.sym]) {
+        if (!coinData[c.id]) coinData[c.id] = { history:[] };
+        const d = dexData[c.sym];
+        coinData[c.id].price     = d.price;
+        coinData[c.id].change24h = d.priceChange24h || 0;
+        coinData[c.id].change7d  = 0;
+        coinData[c.id].volume    = d.volume1h || 0;
+        coinData[c.id].mcap      = d.marketCap || 0;
+        coinData[c.id].dex       = d;
+        // Add price to history for indicator calculation
+        coinData[c.id].history = [...(coinData[c.id].history||[]).slice(-199), d.price];
+      }
+    });
+
+    setStatus(`LIVE · ${Object.keys(dexData).length} coins`, "#00ff88");
+    hideError();
+    return true;
+  } catch(e) {
+    showError(`DEX data error: ${e.message}`);
+    setStatus("ERROR", "#ff4455");
+    return false;
   }
-  if (!data) throw new Error("CoinGecko rate limited — try again in 60s");
-  COINS.forEach(c => {
-    if (data[c.id]) {
-      if (!coinData[c.id]) coinData[c.id] = { history:[] };
-      const d = data[c.id];
-      coinData[c.id].price = d.usd;
-      coinData[c.id].change24h = d.usd_24h_change||0;
-      coinData[c.id].change7d = d.usd_7d_change||0;
-      coinData[c.id].volume = d.usd_24h_vol||0;
-      coinData[c.id].mcap = d.usd_market_cap||0;
-      coinData[c.id].history = [...(coinData[c.id].history||[]).slice(-199), d.usd];
-    }
-  });
 }
+
+async function fetchHistory_unused
 
 async function fetchHistory(coinId, delay=0) {
   await new Promise(r=>setTimeout(r,delay));
@@ -506,9 +508,10 @@ async function fetchHistory(coinId, delay=0) {
 async function fetchServerState() {
   try {
     const res = await fetch("/api/trading-state");
-    if (!res.ok) return false;
+    if (!res.ok) { console.log("trading-state HTTP error:", res.status); return false; }
     const state = await res.json();
-    if (state.error || !state.lastRun) return false;
+    console.log("trading-state response:", state.lastRun, "positions:", Object.keys(state.portfolio?.positions||{}).length);
+    if (state.error || !state.lastRun) { console.log("No lastRun in state:", state.error||"missing lastRun"); return false; }
 
     // Server is running — use server state
     serverMode = true;
@@ -1641,7 +1644,7 @@ fetchServerState().then(serverRunning => {
     console.log("Server not available — using CoinGecko fallback");
     document.getElementById("scanner-loading").textContent = "FETCHING PRICES FROM COINGECKO...";
     fetchAll();
-    COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
+    // History built from real-time DEX price updates
     setInterval(fetchAll, 90000);
     setInterval(fetchWalletFeed, 60000);
     setInterval(checkExits, 10000);
