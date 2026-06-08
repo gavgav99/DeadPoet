@@ -96,7 +96,7 @@ tr.has-pos{background:#070d0a;}
       <tbody id="scanner-body"></tbody>
     </table>
   </div>
-  <div id="scanner-loading" style="text-align:center;padding:60px;color:#00ff88;font-size:11px;letter-spacing:2px;">FETCHING LIVE DATA FROM COINGECKO...</div>
+  <div id="scanner-loading" style="text-align:center;padding:60px;color:#00ff88;font-size:11px;letter-spacing:2px;display:none;"></div>
   <div id="coin-detail" style="margin-top:16px;display:none;"></div>
 </div>
 
@@ -625,28 +625,22 @@ async function postTrade(action, coinId, price, sym, signal, score, targets) {
 }
 
 async function fetchAll() {
-  setStatus("FETCHING","#f0c040");
+  // Background price refresh — silent, doesn't block UI
   try {
     await fetchPrices();
     COINS.forEach(c => {
       const ind = calcSignal(c.id);
       if (ind) indicators[c.id] = ind;
     });
-    if (autoMode) runAutoTrader();
     checkExits();
     updatePeaks();
     document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
-    document.getElementById("scanner-loading").style.display = "none";
-    setStatus(`LIVE · ${COINS.length} coins`, "#00ff88");
-    hideError();
-  } catch(e) {
-    showError(`CoinGecko error: ${e.message} — using server data`);
-    setStatus("USING SERVER","#f0c040");
-  } finally {
-    // Always render regardless of errors
     renderScanner();
     renderPositions();
     updateBadges();
+  } catch(e) {
+    // Silent fail — server state is primary source
+    console.log("CoinGecko fallback error:", e.message);
   }
 }
 
@@ -1575,13 +1569,12 @@ fetchServerState().then(serverRunning => {
 // Wallet feed runs independently
 fetchWalletFeed();
 
-// Try server state — if trading-engine is deployed it handles everything
+// Poll intervals set by first fetchServerState call above
+// Fallback local intervals if server not available
 fetchServerState().then(serverRunning => {
   if (serverRunning) {
     console.log("✓ Server mode — trading-engine is running 24/7");
-    // Poll server for updates every 30s instead of running local engine
     setInterval(fetchServerState, 30000);
-    setInterval(fetchAll, 90000);      // still update live prices for display
     setInterval(fetchWalletFeed, 60000);
   } else {
     console.log("Server mode not available — running locally");
