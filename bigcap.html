@@ -558,7 +558,7 @@ async function fetchServerState() {
 
     // Recalc indicators from server's history
     COINS.forEach(c => {
-      const ind = calcSignal(coinData[c.id]?.history||[], coinData[c.id]?.price);
+      const ind = calcSignal(c.id);
       if (ind) indicators[c.id] = ind;
     });
 
