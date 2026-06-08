@@ -628,25 +628,25 @@ async function fetchAll() {
   setStatus("FETCHING","#f0c040");
   try {
     await fetchPrices();
-    // Recalc indicators
     COINS.forEach(c => {
       const ind = calcSignal(c.id);
       if (ind) indicators[c.id] = ind;
     });
-    // Auto trade
     if (autoMode) runAutoTrader();
     checkExits();
     updatePeaks();
-    renderScanner();
-    renderPositions();
-    updateBadges();
     document.getElementById("last-update").textContent = new Date().toLocaleTimeString();
     document.getElementById("scanner-loading").style.display = "none";
     setStatus(`LIVE · ${COINS.length} coins`, "#00ff88");
     hideError();
   } catch(e) {
-    showError(`CoinGecko error: ${e.message} — rate limited or offline`);
-    setStatus("ERROR","#ff4455");
+    showError(`CoinGecko error: ${e.message} — using server data`);
+    setStatus("USING SERVER","#f0c040");
+  } finally {
+    // Always render regardless of errors
+    renderScanner();
+    renderPositions();
+    updateBadges();
   }
 }
 
@@ -1555,17 +1555,25 @@ if (savedTime && (savedJournal.length > 0 || openCount > 0)) {
   document.getElementById("tabs").insertAdjacentElement("afterend", banner);
 }
 
-// Render saved state immediately before fetching new prices
+// Render immediately — don't wait for any network requests
+document.getElementById("scanner-loading").style.display = "none";
+renderScanner();
 renderPositions();
 renderJournal();
 renderLearning();
 updateBadges();
 
-// Then fetch live data
-fetchAll();
+// Fetch server state first — this is the primary data source
+fetchServerState().then(serverRunning => {
+  if (!serverRunning) {
+    // Only fall back to CoinGecko if server not available
+    fetchAll();
+    COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
+  }
+});
+
+// Wallet feed runs independently
 fetchWalletFeed();
-// Fetch history for top 10 coins staggered
-COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
 
 // Try server state — if trading-engine is deployed it handles everything
 fetchServerState().then(serverRunning => {
