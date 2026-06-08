@@ -309,39 +309,72 @@ function calcRelativeStrength(dexData) {
   return rankings;
 }
 
+// Direct token contract addresses — avoids symbol search ambiguity
+// These are the canonical liquid pairs on DEXScreener
+const COIN_PAIRS = {
+  // ETH chain
+  PEPE:  { chain:"ethereum", token:"0x6982508145454ce325ddbe47a25d4ec3d2311933" },
+  SHIB:  { chain:"ethereum", token:"0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce" },
+  MOG:   { chain:"ethereum", token:"0xaaee1a9723aadb7afa2810263653a34ba2c21c7a" },
+  FLOKI: { chain:"ethereum", token:"0xcf0c122c6b73ff809c693db761e7baebe62b6a2e" },
+  TURBO: { chain:"ethereum", token:"0xa35923162c49cf95e6bf26623385eb431ad920d3" },
+  NEIRO: { chain:"ethereum", token:"0x812ba41e071c7b7fa095a0849acf5ba7e9e63d8b" },
+  ELON:  { chain:"ethereum", token:"0x761d38e5ddf6ccf6cf7c55759d5210750b5d60f3" },
+  DOGE:  { chain:"ethereum", token:"0x4206931337dc273a630d328da6441786bfad668f" },
+  // SOL chain
+  BONK:  { chain:"solana",   token:"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" },
+  WIF:   { chain:"solana",   token:"EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm" },
+  POPCAT:{ chain:"solana",   token:"7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr" },
+  BOME:  { chain:"solana",   token:"ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82" },
+  GIGA:  { chain:"solana",   token:"63LfDmNb3MQ8mw9MtZ2To9bEA2M71kZUUGq5tiJxcqj9" },
+  MEW:   { chain:"solana",   token:"MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5" },
+  // BASE chain
+  BRETT: { chain:"base",     token:"0x532f27101965dd16442e59d40670faf5ebb142e4" },
+};
+
 async function fetchDexBulk() {
-  // Fetch all coins directly from DEXScreener — no proxy, no credits
-  const symbols = ["PEPE","BONK","WIF","DOGE","SHIB","FLOKI","BRETT","MOG","POPCAT","BOME","TURBO","NEIRO","ELON","GIGA","MEW"];
   const results = {};
 
-  await Promise.all(symbols.map(async (sym) => {
+  // Fetch by token address — definitive, no ambiguity
+  await Promise.all(Object.entries(COIN_PAIRS).map(async ([sym, info]) => {
     try {
-      const res = await fetch(`${DEXSCREENER}/search?q=${sym}`, {
-        headers: { "Accept":"application/json", "User-Agent":"DeadPoet/1.0" }
-      });
+      const res = await fetch(
+        `${DEXSCREENER}/tokens/${info.chain}/${info.token}`,
+        { headers: { "Accept":"application/json", "User-Agent":"DeadPoet/1.0" } }
+      );
       if (!res.ok) return;
       const data = await res.json();
+
+      // Get the most liquid pair for this token
       const pairs = (data.pairs||[])
-        .filter(p => p.baseToken?.symbol?.toUpperCase()===sym && (p.liquidity?.usd||0)>100000)
-        .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
+        .filter(p => (p.liquidity?.usd||0) > 10000)
+        .sort((a,b) => (b.volume?.h24||0) - (a.volume?.h24||0)); // sort by 24h volume
+
       const best = pairs[0];
       if (!best) return;
+
       results[sym] = {
         symbol: sym,
         price: parseFloat(best.priceUsd||0),
-        priceChange5m: best.priceChange?.m5||0,
-        priceChange1h: best.priceChange?.h1||0,
-        priceChange24h: best.priceChange?.h24||0,
-        volume5m: best.volume?.m5||0,
-        volume1h: best.volume?.h1||0,
-        buys5m: best.txns?.m5?.buys||0,
-        sells5m: best.txns?.m5?.sells||0,
-        liquidity: best.liquidity?.usd||0,
-        marketCap: best.marketCap||best.fdv||0,
+        priceChange5m:  best.priceChange?.m5  || 0,
+        priceChange1h:  best.priceChange?.h1  || 0,
+        priceChange24h: best.priceChange?.h24 || 0,
+        volume5m:  best.volume?.m5  || 0,
+        volume1h:  best.volume?.h1  || 0,
+        volume24h: best.volume?.h24 || 0,
+        buys5m:  best.txns?.m5?.buys  || 0,
+        sells5m: best.txns?.m5?.sells || 0,
+        buys1h:  best.txns?.h1?.buys  || 0,
+        sells1h: best.txns?.h1?.sells || 0,
+        liquidity:  best.liquidity?.usd || 0,
+        marketCap:  best.marketCap || best.fdv || 0,
         pairAddress: best.pairAddress,
         chain: best.chainId,
       };
-    } catch(e) {}
+      console.log(`${sym}: $${results[sym].price} 5m:${results[sym].priceChange5m}% B/S:${results[sym].buys5m}/${results[sym].sells5m} vol5m:$${results[sym].volume5m}`);
+    } catch(e) {
+      console.error(`DEX token fetch error ${sym}:`, e.message);
+    }
   }));
 
   return results;

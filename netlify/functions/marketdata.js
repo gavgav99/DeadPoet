@@ -84,24 +84,40 @@ exports.handler = async (event) => {
 
     // ── DEXScreener bulk — get all coins at once ──
     if (endpoint === "bulk") {
-      const symbols = ["PEPE","BONK","WIF","DOGE","SHIB","FLOKI","BRETT","MOG","POPCAT","BOME","TURBO","NEIRO","ELON"];
+      const COIN_PAIRS = {
+        PEPE:  { chain:"ethereum", token:"0x6982508145454ce325ddbe47a25d4ec3d2311933" },
+        SHIB:  { chain:"ethereum", token:"0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce" },
+        MOG:   { chain:"ethereum", token:"0xaaee1a9723aadb7afa2810263653a34ba2c21c7a" },
+        FLOKI: { chain:"ethereum", token:"0xcf0c122c6b73ff809c693db761e7baebe62b6a2e" },
+        TURBO: { chain:"ethereum", token:"0xa35923162c49cf95e6bf26623385eb431ad920d3" },
+        NEIRO: { chain:"ethereum", token:"0x812ba41e071c7b7fa095a0849acf5ba7e9e63d8b" },
+        ELON:  { chain:"ethereum", token:"0x761d38e5ddf6ccf6cf7c55759d5210750b5d60f3" },
+        DOGE:  { chain:"ethereum", token:"0x4206931337dc273a630d328da6441786bfad668f" },
+        BONK:  { chain:"solana",   token:"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" },
+        WIF:   { chain:"solana",   token:"EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm" },
+        POPCAT:{ chain:"solana",   token:"7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr" },
+        BOME:  { chain:"solana",   token:"ukHH6c7mMyiWCf1b9pnWe25TSpkDDt3H5pQZgZ74J82" },
+        GIGA:  { chain:"solana",   token:"63LfDmNb3MQ8mw9MtZ2To9bEA2M71kZUUGq5tiJxcqj9" },
+        MEW:   { chain:"solana",   token:"MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5" },
+        BRETT: { chain:"base",     token:"0x532f27101965dd16442e59d40670faf5ebb142e4" },
+      };
       const results = {};
 
-      // Fetch in batches to avoid rate limits
-      await Promise.all(symbols.map(async (s) => {
+      await Promise.all(Object.entries(COIN_PAIRS).map(async ([sym, info]) => {
         try {
-          const res = await fetch(`${DEXSCREENER}/search?q=${s}`, {
-            headers: { "Accept":"application/json" }
-          });
+          const res = await fetch(
+            `${DEXSCREENER}/tokens/${info.chain}/${info.token}`,
+            { headers: { "Accept":"application/json" } }
+          );
           if (!res.ok) return;
           const data = await res.json();
           const pairs = (data.pairs||[])
-            .filter(p => p.baseToken?.symbol?.toUpperCase()===s && (p.liquidity?.usd||0)>100000)
-            .sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
+            .filter(p => (p.liquidity?.usd||0) > 10000)
+            .sort((a,b) => (b.volume?.h24||0) - (a.volume?.h24||0));
           const best = pairs[0];
           if (!best) return;
-          results[s] = {
-            symbol: s,
+          results[sym] = {
+            symbol: sym,
             price: parseFloat(best.priceUsd||0),
             priceChange5m: best.priceChange?.m5||0,
             priceChange1h: best.priceChange?.h1||0,
