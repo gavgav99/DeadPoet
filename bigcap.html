@@ -623,7 +623,13 @@ async function fetchServerState() {
       });
     }
 
-    renderScanner(); renderPositions(); renderJournal(); renderLearning(); updateBadges();
+    // Render everything now that data is loaded
+    document.getElementById("scanner-loading").style.display = "none";
+    renderScanner();
+    renderPositions();
+    renderJournal();
+    renderLearning();
+    updateBadges();
     return true;
   } catch(e) {
     return false;
@@ -1610,36 +1616,32 @@ if (savedTime && (savedJournal.length > 0 || openCount > 0)) {
   document.getElementById("tabs").insertAdjacentElement("afterend", banner);
 }
 
-// Render immediately — don't wait for any network requests
-document.getElementById("scanner-loading").style.display = "none";
-renderScanner();
+// Show loading while connecting to server
+document.getElementById("scanner-loading").style.display = "block";
+document.getElementById("scanner-loading").textContent = "⚡ CONNECTING TO DEAD POET SERVER...";
+document.getElementById("scanner-loading").style.color = "#a855f7";
+
+// Render non-data tabs immediately (positions/journal from localStorage)
 renderPositions();
 renderJournal();
-renderLearning();
 updateBadges();
-
-// Fetch server state first — this is the primary data source
-fetchServerState().then(serverRunning => {
-  if (!serverRunning) {
-    // Only fall back to CoinGecko if server not available
-    fetchAll();
-    COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
-  }
-});
 
 // Wallet feed runs independently
 fetchWalletFeed();
 
-// Poll intervals set by first fetchServerState call above
-// Fallback local intervals if server not available
+// Primary: fetch server state — this populates scanner and all data
 fetchServerState().then(serverRunning => {
   if (serverRunning) {
+    // Server mode — scanner rendered by fetchServerState after data loads
     console.log("✓ Server mode — trading-engine is running 24/7");
     setInterval(fetchServerState, 30000);
     setInterval(fetchWalletFeed, 60000);
   } else {
-    console.log("Server mode not available — running locally");
-    // Fall back to local mode
+    // Fallback: local mode with CoinGecko
+    console.log("Server not available — using CoinGecko fallback");
+    document.getElementById("scanner-loading").textContent = "FETCHING PRICES FROM COINGECKO...";
+    fetchAll();
+    COINS.slice(0,10).forEach((c,i)=>fetchHistory(c.id, 1000+i*700));
     setInterval(fetchAll, 90000);
     setInterval(fetchWalletFeed, 60000);
     setInterval(checkExits, 10000);
