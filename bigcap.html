@@ -517,17 +517,34 @@ async function fetchServerState() {
     journal = state.journal || journal;
     coinProfiles = state.profiles || coinProfiles;
 
-    // Update local price data from server's last prices
-    if (state.lastPrices) {
-      COINS.forEach(c => {
-        if (state.lastPrices[c.id]) {
-          if (!coinData[c.id]) coinData[c.id] = { history:[] };
-          coinData[c.id].price = state.lastPrices[c.id].usd;
-          coinData[c.id].change24h = state.lastPrices[c.id].usd_24h_change||0;
-          coinData[c.id].change7d = state.lastPrices[c.id].usd_7d_change||0;
-          coinData[c.id].volume = state.lastPrices[c.id].usd_24h_vol||0;
-          coinData[c.id].mcap = state.lastPrices[c.id].usd_market_cap||0;
-        }
+    // Update coinData from server — try DEX data first (sym), fallback to CoinGecko (id)
+    const dexData = state.lastDex || {};
+    COINS.forEach(c => {
+      if (!coinData[c.id]) coinData[c.id] = { history:[] };
+      // Prefer DEX data (real-time) over CoinGecko (hourly)
+      if (dexData[c.sym]) {
+        const d = dexData[c.sym];
+        coinData[c.id].price     = d.price;
+        coinData[c.id].change24h = d.priceChange24h||0;
+        coinData[c.id].change7d  = 0;
+        coinData[c.id].volume    = d.volume1h||0;
+        coinData[c.id].mcap      = d.marketCap||0;
+        coinData[c.id].dex       = d; // store full DEX data
+      } else if (state.lastPrices && state.lastPrices[c.id]) {
+        const d = state.lastPrices[c.id];
+        coinData[c.id].price     = d.usd;
+        coinData[c.id].change24h = d.usd_24h_change||0;
+        coinData[c.id].change7d  = d.usd_7d_change||0;
+        coinData[c.id].volume    = d.usd_24h_vol||0;
+        coinData[c.id].mcap      = d.usd_market_cap||0;
+      }
+    });
+
+    // Also populate indicators from server state
+    if (state.indicators) {
+      Object.entries(state.indicators).forEach(([sym, ind]) => {
+        const coin = COINS.find(c => c.sym === sym);
+        if (coin) indicators[coin.id] = { ...ind, dex: dexData[sym] };
       });
     }
 
@@ -832,7 +849,15 @@ function renderScanner() {
 
   body.innerHTML = display.map(coin=>{
     const d = coinData[coin.id]||{};
+    const dex = d.dex || ind.dex || {};
     const ind = indicators[coin.id]||{};
+    // Use DEX data for real-time fields if available
+    const p5m = dex.priceChange5m ?? d.change5m ?? 0;
+    const p1h = dex.priceChange1h ?? d.change1h ?? 0;
+    const buys5m = dex.buys5m || 0;
+    const sells5m = dex.sells5m || 0;
+    const vol5m = dex.volume5m || 0;
+    const bsr = sells5m > 0 ? buys5m/sells5m : buys5m > 0 ? 5 : null;
     const hasPos = !!portfolio.positions[coin.id];
     const pos = portfolio.positions[coin.id];
     const t = getTargets(coin.sym);
@@ -1161,14 +1186,14 @@ function renderLearning() {
           const zwr = (zt.filter(t=>t.won).length/zt.length)*100;
           const zavg = zt.reduce((s,t)=>s+(t.pnlPct||0),0)/zt.length;
           const zc = zwr>=60?"#00ff88":zwr>=45?"#f0c040":"#ff4455";
-          return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+          return `<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
             <span style="color:#7080a0;font-size:10px">\${z.label}</span>
             <div style="display:flex;gap:12px;font-size:9px">
               <span style="color:#5a6070">\${zt.length}T</span>
               <span style="color:\${zc};font-weight:bold">\${zwr.toFixed(0)}% WR</span>
               <span style="color:\${zavg>=0?"#00ff88":"#ff4455"}">\${zavg>=0?"+":""}\${zavg.toFixed(1)}% avg</span>
             </div>
-          </div>\`;
+          </div>`;
         }).join("");
       })()}
     </div>
@@ -1191,13 +1216,13 @@ function renderLearning() {
           return entries.map(([sig, s]) => {
             const wr = s.total > 0 ? (s.wins/s.total)*100 : 0;
             const c = wr >= 60 ? "#00ff88" : wr >= 45 ? "#f0c040" : "#ff4455";
-            return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+            return `<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
               <span style="color:#7080a0;font-size:10px">\${sig.replace("_"," ")}</span>
               <div style="display:flex;gap:10px;font-size:9px">
                 <span style="color:#5a6070">\${s.total}T</span>
                 <span style="color:\${c};font-weight:bold">\${wr.toFixed(0)}% accurate</span>
               </div>
-            </div>\`;
+            </div>`;
           }).join('');
         })()}
         <div style="font-size:8px;color:#1a2530;margin-top:8px">If ACCUMULATION accuracy stays above 60% over 20+ trades — increase its weight. Below 50% — reduce it.</div>
@@ -1219,13 +1244,13 @@ function renderLearning() {
           return entries.map(([sig, s]) => {
             const wr = s.total > 0 ? (s.wins/s.total)*100 : 0;
             const c = wr >= 60 ? "#00ff88" : wr >= 45 ? "#f0c040" : "#ff4455";
-            return \`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
+            return `<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0a0d14;border-radius:4px;margin-bottom:5px">
               <span style="color:#7080a0;font-size:10px">\${sig.replace("RS_","")}</span>
               <div style="display:flex;gap:10px;font-size:9px">
                 <span style="color:#5a6070">\${s.total}T</span>
                 <span style="color:\${c};font-weight:bold">\${wr.toFixed(0)}% accurate</span>
               </div>
-            </div>\`;
+            </div>`;
           }).join('');
         })()}
         <div style="font-size:8px;color:#1a2530;margin-top:8px">RS_STRONG above 65% = strong predictor. Adjust weighting after 20+ trades.</div>
@@ -1390,6 +1415,42 @@ async function loadAnalytics() {
       "Focus on coins with 60%+ win rate and 10+ trades"
     ) : "";
 
+    // Fear & Greed breakdown
+    const fgData = Object.entries(acc)
+      .filter(([k]) => k.startsWith("fg:"))
+      .map(([k,v]) => ({ label:k.replace("fg:","").replace("_"," "), winRate:v.winRate||0, total:v.total||0, avgPnl:v.avgPnl||0 }))
+      .filter(d => d.total >= 2)
+      .sort((a,b) => b.winRate - a.winRate);
+    const fgHTML = fgData.length > 0 ? breakdownTable(
+      "BY FEAR & GREED ZONE — does sentiment matter?",
+      fgData,
+      "Extreme Fear entries should outperform. If not, F&G filter isn't adding value."
+    ) : "";
+
+    // BTC direction breakdown
+    const btcData = Object.entries(acc)
+      .filter(([k]) => k.startsWith("btc:"))
+      .map(([k,v]) => ({ label:k.replace("btc:","").replace("_"," "), winRate:v.winRate||0, total:v.total||0, avgPnl:v.avgPnl||0 }))
+      .filter(d => d.total >= 2)
+      .sort((a,b) => b.winRate - a.winRate);
+    const btcHTML = btcData.length > 0 ? breakdownTable(
+      "BY BTC DIRECTION — does macro matter?",
+      btcData,
+      "BTC STRONG UP should have highest win rate. Validates the BTC filter."
+    ) : "";
+
+    // Score range breakdown  
+    const scoreData = Object.entries(acc)
+      .filter(([k]) => k.startsWith("score:"))
+      .map(([k,v]) => ({ label:"Score "+k.replace("score:",""), winRate:v.winRate||0, total:v.total||0, avgPnl:v.avgPnl||0 }))
+      .filter(d => d.total >= 2)
+      .sort((a,b) => b.winRate - a.winRate);
+    const scoreHTML = scoreData.length > 0 ? breakdownTable(
+      "BY ENTRY SCORE — are higher scores actually better?",
+      scoreData,
+      "Score 95-100 should dramatically outperform 78-79."
+    ) : "";
+
     // Hour of day breakdown
     const hourHTML = bd.byHour ? breakdownTable(
       "BY HOUR (UTC) — best time to trade",
@@ -1497,7 +1558,7 @@ async function loadAnalytics() {
         ${insights().map(i=>`<div style="font-size:11px;color:${i.c};margin-bottom:8px;line-height:1.6">${i.text}</div>`).join("")}
       </div>`;
 
-    el.innerHTML = overallHTML + insightHTML + coinHTML + signalStats() + hourHTML + dowHTML + recentHTML;
+    el.innerHTML = overallHTML + insightHTML + fgHTML + btcHTML + scoreHTML + coinHTML + signalStats() + hourHTML + dowHTML + recentHTML;
 
   } catch(e) {
     el.innerHTML = `<div class="empty">Analytics error: ${e.message}</div>`;
