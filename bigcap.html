@@ -211,31 +211,21 @@ tr.has-pos{background:#070d0a;}
 <script>
 // ─── COINS ────────────────────────────────────────────────────────────────────
 const COINS = [
-  { id:"dogecoin",            sym:"DOGE",    name:"Dogecoin",           tier:1 },
-  { id:"shiba-inu",           sym:"SHIB",    name:"Shiba Inu",          tier:1 },
-  { id:"pepe",                sym:"PEPE",    name:"Pepe",               tier:2 },
-  { id:"dogwifcoin",          sym:"WIF",     name:"dogwifhat",          tier:3 },
-  { id:"bonk",                sym:"BONK",    name:"Bonk",               tier:2 },
-  { id:"floki",               sym:"FLOKI",   name:"Floki",              tier:2 },
-  { id:"brett-based",         sym:"BRETT",   name:"Brett",              tier:3 },
-  { id:"mog-coin",            sym:"MOG",     name:"Mog Coin",           tier:4 },
-  { id:"popcat",              sym:"POPCAT",  name:"Popcat",             tier:3 },
-  { id:"cat-in-a-dogs-world", sym:"MEW",     name:"cat in a dogs world",tier:3 },
-  { id:"book-of-meme",        sym:"BOME",    name:"Book of Meme",       tier:3 },
-  { id:"turbo",               sym:"TURBO",   name:"Turbo",              tier:3 },
-  { id:"babydoge",            sym:"BABYDOGE",name:"Baby Doge",          tier:2 },
-  { id:"neiro-on-eth",        sym:"NEIRO",   name:"Neiro",              tier:4 },
-  { id:"giga",                sym:"GIGA",    name:"Gigachad",           tier:4 },
-  { id:"michi",               sym:"MICHI",   name:"michi",              tier:4 },
-  { id:"myro",                sym:"MYRO",    name:"Myro",               tier:4 },
-  { id:"dogelon-mars",        sym:"ELON",    name:"Dogelon Mars",       tier:2 },
-  { id:"wen-token",           sym:"WEN",     name:"Wen",                tier:4 },
-  { id:"samoyedcoin",         sym:"SAMO",    name:"Samoyedcoin",        tier:4 },
-  { id:"coq-inu",             sym:"COQ",     name:"Coq Inu",            tier:4 },
-  { id:"sundog",              sym:"SUNDOG",  name:"Sundog",             tier:3 },
-  { id:"smoking-chicken-fish",sym:"SCF",     name:"Smoking Chicken Fish",tier:4},
-  { id:"landwolf",            sym:"WOLF",    name:"Landwolf",           tier:4 },
-  { id:"jesus-coin",          sym:"JESUS",   name:"Jesus Coin",         tier:4 },
+  { id:"dogecoin",            sym:"DOGE",   tier:1 },
+  { id:"shiba-inu",           sym:"SHIB",   tier:1 },
+  { id:"pepe",                sym:"PEPE",   tier:2 },
+  { id:"dogwifcoin",          sym:"WIF",    tier:3 },
+  { id:"bonk",                sym:"BONK",   tier:2 },
+  { id:"floki",               sym:"FLOKI",  tier:2 },
+  { id:"brett-based",         sym:"BRETT",  tier:3 },
+  { id:"mog-coin",            sym:"MOG",    tier:4 },
+  { id:"popcat",              sym:"POPCAT", tier:3 },
+  { id:"cat-in-a-dogs-world", sym:"MEW",    tier:3 },
+  { id:"book-of-meme",        sym:"BOME",   tier:3 },
+  { id:"turbo",               sym:"TURBO",  tier:3 },
+  { id:"neiro-on-eth",        sym:"NEIRO",  tier:4 },
+  { id:"giga",                sym:"GIGA",   tier:4 },
+  { id:"dogelon-mars",        sym:"ELON",   tier:2 },
 ];
 
 // ─── TIER DEFAULTS (researched 24-48h swing data) ────────────────────────────
@@ -549,9 +539,9 @@ async function fetchServerState() {
         if (coin) indicators[coin.id] = { ...ind, dex: dexData[sym] };
       });
     }
-    // Recalc any missing indicators
+    // Server indicators are authoritative — only fill true gaps
     COINS.forEach(c => {
-      if (!indicators[c.id] && coinData[c.id]?.price) {
+      if (!indicators[c.id] && coinData[c.id]?.price && (coinData[c.id]?.history||[]).length >= 20) {
         const ind = calcSignal(c.id);
         if (ind) indicators[c.id] = ind;
       }
