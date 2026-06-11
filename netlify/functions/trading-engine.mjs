@@ -621,12 +621,37 @@ export default async (request, context) => {
     let state = {
       portfolio:{ cash:STARTING, positions:{}, totalValue:STARTING },
       journal:[], profiles:{}, peaks:{}, prevDexData:{},
-      fearGreed:null, indicators:{}, lastRun:null, version:"v4",
+      fearGreed:null, indicators:{}, lastRun:null, version:"v5",
     };
     try {
       const saved = await store.get("state", { type:"json" });
       if (saved) state = { ...state, ...saved };
     } catch(e) { console.log("Fresh state"); }
+
+    // ── ONE-TIME MIGRATION TO v5 — wipe legacy corrupted state ──
+    // Old engine used lowercase CoinGecko ids with stale prices.
+    // Those positions can never exit (sym lookup fails) and their
+    // P&L is fake. Full clean reset, then never again.
+    if (state.version !== "v5") {
+      console.log("⚠ Migrating to v5 — wiping legacy state, fresh $10,000 start");
+      state = {
+        portfolio:{ cash:STARTING, positions:{}, totalValue:STARTING },
+        journal:[], profiles:{}, peaks:{}, prevDexData:{},
+        fearGreed:null, indicators:{}, lastRun:null, version:"v5",
+      };
+    }
+
+    // Safety: purge any position whose key isn't a tracked sym
+    const validSyms = new Set(COINS.map(c=>c.sym));
+    Object.keys(state.portfolio.positions).forEach(key => {
+      if (!validSyms.has(key)) {
+        console.log(`Purging untracked position: ${key} — returning cost basis to cash`);
+        const pos = state.portfolio.positions[key];
+        state.portfolio.cash += (pos.size || pos.qty * pos.entryPrice || 0);
+        delete state.portfolio.positions[key];
+        delete state.peaks[key];
+      }
+    });
 
     // ── Fetch real-time data ──
     const ETHERSCAN_KEY = process.env.ETHERSCAN_API_KEY || null;
