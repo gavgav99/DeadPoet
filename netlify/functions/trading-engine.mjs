@@ -613,6 +613,13 @@ function buildEntrySnapshot(coin, price, ind, fearGreed, macro, dex, size) {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default async (request, context) => {
+  // Kill switch — set TRADING_ENGINE_ENABLED=false in Netlify env vars to pause
+  // the scheduled runs instantly, without a redeploy. Defaults to enabled.
+  if (process.env.TRADING_ENGINE_ENABLED === "false") {
+    console.log(`[${new Date().toISOString()}] Trading engine skipped — TRADING_ENGINE_ENABLED=false`);
+    return new Response(JSON.stringify({ skipped: true, reason: "disabled via TRADING_ENGINE_ENABLED" }), { status: 200 });
+  }
+
   console.log(`[${new Date().toISOString()}] Dead Poet Engine v4 — Real-time momentum`);
   const store = getStore({ name:"trading-state", siteID:context.site.id, token:context.token });
 
@@ -930,4 +937,7 @@ export default async (request, context) => {
   }
 };
 
-export const config = { schedule:"* * * * *" };
+// Was "* * * * *" (every minute — 24/7, ~43,000 runs/month, far more often than
+// the 5-minute candle data it reads actually changes). Every 10 minutes still
+// keeps the data fresh and cuts invocations ~10x.
+export const config = { schedule:"*/10 * * * *" };
